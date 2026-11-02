@@ -33,7 +33,7 @@ export async function findOrCreateUser(phone: string): Promise<User> {
   const d = await UserModel.findOneAndUpdate(
     { phone },
     { $setOnInsert: { uid: randomUUID() } }, // phone comes from the filter
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: "after" },
   ).lean();
   return toUser(d);
 }
@@ -52,6 +52,6 @@ export async function updateProfile(id: string, p: { name: string; city: string 
     return u ?? null;
   }
   await connectDB();
-  const d = await UserModel.findOneAndUpdate({ uid: id }, { $set: p }, { new: true }).lean();
+  const d = await UserModel.findOneAndUpdate({ uid: id }, { $set: p }, { returnDocument: "after" }).lean();
   return d ? toUser(d) : null;
 }

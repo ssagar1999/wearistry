@@ -93,7 +93,7 @@ export async function likeThread(id: string, uid: string): Promise<{ likes: numb
     return { likes: t.likes, liked: !on };
   }
   await db();
-  const opts = { new: true, projection: { likes: 1 } };
+  const opts = { returnDocument: "after" as const, projection: { likes: 1 } };
   const off = await ThreadModel.findOneAndUpdate({ slug: id, likedBy: uid }, { $pull: { likedBy: uid }, $inc: { likes: -1 } }, opts).lean();
   if (off) return { likes: off.likes, liked: false };
   const on = await ThreadModel.findOneAndUpdate({ slug: id, likedBy: { $ne: uid } }, { $addToSet: { likedBy: uid }, $inc: { likes: 1 } }, opts).lean();
