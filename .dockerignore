@@ -1,0 +1,10 @@
+# Things Docker should NOT copy into the image (keeps it small, fast and free of secrets)
+node_modules
+.next
+.data
+.git
+.env*
+!.env.example
+npm-debug.log*
+Dockerfile
+compose.yaml

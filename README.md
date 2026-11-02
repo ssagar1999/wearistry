@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wearistry (कथा)
 
-## Getting Started
+India's easy pre-loved fashion marketplace: buy, sell and swap clothes, plus Threads for showing finds, asking for pieces and offering swaps. Prices in ₹, shipping within India only.
 
-First, run the development server:
+Built with Next.js 15, TypeScript, Tailwind CSS, MongoDB (Mongoose), sharp for photo optimisation, MSG91 for phone OTP login and Amazon S3 + CloudFront for photo storage.
+
+## Run it
+
+**Quick dev mode** (no database needed; data lives in memory, and login codes show on screen):
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**With Docker** (the app plus a real MongoDB):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker compose up --build
+```
 
-## Learn More
+New to Docker? Start with [teachdockerfile.md](teachdockerfile.md).
 
-To learn more about Next.js, take a look at the following resources:
+## Settings
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy `.env.example` to `.env.local` and fill in what you need. Everything is optional in dev mode.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Feature | Settings | Guide |
+| --- | --- | --- |
+| Database | `MONGODB_URI` | MongoDB Atlas connection string |
+| Login cookies | `AUTH_SECRET` | Required in production |
+| SMS login codes | `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID` | [docs/SMS_SETUP.md](docs/SMS_SETUP.md) |
+| Photo storage | `AWS_*`, `S3_BUCKET`, `S3_PUBLIC_URL` | [docs/S3_SETUP.md](docs/S3_SETUP.md) |
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` / `npm start` | Production build and server |
+| `npm run lint` | ESLint |
+| `npm run sms:test -- 98765XXXXX` | Sends one test OTP SMS through MSG91 |

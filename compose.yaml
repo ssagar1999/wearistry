@@ -1,0 +1,37 @@
+# Runs Wearistry and a MongoDB database together with one command: docker compose up --build
+# Explained step by step in teachdockerfile.md.
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000" # your computer's port : the container's port
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/wearistry # "mongo" is the database service's name below
+      AUTH_SECRET: ${AUTH_SECRET:-local-docker-secret-change-me}
+      # Local mode: login codes show on screen and photos are saved in the uploads volume.
+      # Never set this on the real live site.
+      DEV_MODE: "true"
+    volumes:
+      - uploads:/app/.data/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:8
+    ports:
+      - "127.0.0.1:27017:27017" # only reachable from your own computer, e.g. with MongoDB Compass
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  uploads: # uploaded photos survive restarts
+  mongo-data: # database survives restarts
