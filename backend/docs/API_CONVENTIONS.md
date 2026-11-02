@@ -55,7 +55,7 @@ All codes in this table are defined in `src/utils/api-error.js` and produced by 
 { "data": { "status": "ok", "uptimeSeconds": 42 } }
 ```
 
-**Lists add `meta`** (planned with the first list endpoint, milestone 3):
+**Lists add `meta`:**
 
 ```json
 { "data": [ ... ], "meta": { "nextCursor": "…", "limit": 20 } }
@@ -78,14 +78,15 @@ All codes in this table are defined in `src/utils/api-error.js` and produced by 
 - **`details`** is optional: field errors for validation, `{ fields: [...] }` for conflicts.
 - **`requestId`** matches the `X-Request-Id` response header and the server logs. Ask users for it when debugging.
 
-## Pagination (planned, milestone 3)
+## Pagination
 
-Growing collections (listings, threads) will use **cursor pagination**, which stays fast and consistent while new items are added. Offset paging (`?page=40`) gets slower and skips or repeats items as data changes.
+Every list uses **cursor pagination**, which stays fast and consistent while new items are added. Offset paging (`?page=40`) gets slower and skips or repeats items as data changes.
 
 - **Request:** `GET /api/v1/products?limit=20&cursor=<opaque>`
 - **Limits:** `limit` defaults to 20, maximum 50. No endpoint returns an unbounded list.
 - **Next page:** the response's `meta.nextCursor` is passed back as `cursor`. When it's `null`, there are no more pages.
-- **Cursors are opaque:** clients must not build or parse them.
+- **Cursors are opaque:** clients must not build or parse them. A tampered cursor gets `400`.
+- **Exception:** `GET /api/v1/products?ids=a,b,c` (up to 50 IDs) returns exactly those listings, in that order, with `nextCursor: null`.
 
 ## Filtering and sorting
 
@@ -117,6 +118,23 @@ Readiness returns `503` with a `data` body, not an `error`, because "not ready" 
 | GET    | `/api/v1/auth/me`                          | session           | The logged-in user                                                       |
 | POST   | `/api/v1/auth/logout`                      | optional          | End this session (`204`)                                                 |
 | PATCH  | `/api/v1/users/me`                         | session           | Update `{ name, city }`                                                  |
+
+## Listings, uploads and threads
+
+| Method        | Path                          | Auth                     | Purpose                                                                                                                              |
+| ------------- | ----------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| GET           | `/api/v1/products`            | none                     | Active listings, newest first. Filters: `city`, `category`, `condition`, `exchange=true`, `q` (keywords), `sellerSlug`, or `ids=a,b` |
+| GET           | `/api/v1/products/:id`        | none                     | One listing (by its slug ID)                                                                                                         |
+| POST          | `/api/v1/products`            | session + verified phone | Create a listing. Photos must come from `POST /uploads`                                                                              |
+| POST          | `/api/v1/uploads`             | session                  | One photo per request (`multipart/form-data`, field `file`, ≤ 15 MB) → `{ url }`                                                     |
+| GET           | `/api/v1/media/:file`         | none                     | Locally stored photo sizes (development). Not rate-limited, cacheable forever                                                        |
+| GET           | `/api/v1/threads`             | optional                 | The feed, newest first. `liked` reflects the viewer, `product` is a small listing card                                               |
+| POST          | `/api/v1/threads`             | session + name           | Post `{ kind, text, productId? }`                                                                                                    |
+| POST / DELETE | `/api/v1/threads/:id/like`    | session                  | Like or unlike. **Idempotent:** repeating has no extra effect. Returns `{ likes, liked }`                                            |
+| GET           | `/api/v1/threads/:id/replies` | none                     | Replies, oldest first, cursor-paginated                                                                                              |
+| POST          | `/api/v1/threads/:id/replies` | session + name           | Reply `{ text }`                                                                                                                     |
+
+**Photo URLs:** a stored photo is `<base>/<uuid>`. Request a size by appending `-480.webp`, `-960.webp` or `-1600.webp`.
 
 ## Headers
 

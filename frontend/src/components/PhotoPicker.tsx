@@ -10,12 +10,13 @@ type Item = { key: string; preview: string; status: "preparing" | "uploading" | 
 function upload(blob: Blob, onProgress: (p: number) => void): Promise<string> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/uploads");
+    xhr.open("POST", "/api/v1/uploads");
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
     xhr.onload = () => {
+      // A non-JSON body (e.g. a proxy error page) is treated like an error without a message.
       const body = (() => { try { return JSON.parse(xhr.responseText); } catch { return {}; } })();
-      if (xhr.status === 201 && body.url) resolve(body.url);
-      else reject(new Error(body.error ?? "Upload failed"));
+      if (xhr.status === 201 && body.data?.url) resolve(body.data.url);
+      else reject(new Error(body.error?.message ?? "Upload failed. Tap to retry."));
     };
     xhr.onerror = () => reject(new Error("Network problem. Tap to retry."));
     const form = new FormData();

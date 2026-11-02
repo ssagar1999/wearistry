@@ -1,18 +1,28 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Gallery from "@/components/Gallery";
-import { inr } from "@/lib/data";
-import { getProduct } from "@/lib/repo";
+import { inr, type Product } from "@/lib/data";
+import { ApiNotFoundError, apiGet } from "@/lib/server-api";
+
+async function loadProduct(id: string) {
+  try {
+    return (await apiGet<{ data: Product }>(`/products/${encodeURIComponent(id)}`)).data;
+  } catch (error) {
+    if (error instanceof ApiNotFoundError) return null;
+    throw error;
+  }
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const p = await getProduct(id);
+  // Listing IDs are lowercase slugs; anything else can't exist (and the API would reject it).
+  const p = /^[a-z0-9-]{1,120}$/.test(id) ? await loadProduct(id) : null;
   if (!p) notFound();
   return (
     <div className="grid gap-8 py-8 md:grid-cols-2">
-      <Gallery images={p.images ?? [p.image]} alt={p.title} />
+      <Gallery images={p.images} alt={p.title} />
       <div>
         <p className="label-tag text-terracotta">{[p.category, [p.city, p.state].filter(Boolean).join(", ")].join(" · ")}</p>
         <h1 className="mt-2 font-serif text-[28px] md:text-4xl">{p.title}</h1>

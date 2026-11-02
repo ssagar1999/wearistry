@@ -87,6 +87,6 @@ After implementation, report:
 ## Project notes
 - Repo layout: `frontend/` (Next.js app) and `backend/` (Express API). Each has its own package.json, README and checks.
 - Backend-specific rules: `backend/CLAUDE.md`.
-- Frontend setup and settings: `frontend/README.md` and `frontend/docs/`.
+- Frontend setup and settings: `frontend/README.md`. All setup guides (SMS, Google, S3) are in `backend/docs/`.
 - Add new Docker lessons to the Lesson log in `teachdockerfile.md` when the Docker setup changes.
 - Frontend checks (run in `frontend/`): `npx tsc --noEmit`, `npm run lint`, `npm run build`.

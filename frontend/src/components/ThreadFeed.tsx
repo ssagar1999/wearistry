@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Thread } from "@/lib/threads";
+import { api } from "@/lib/api";
+import { inr, type Reply, type Thread } from "@/lib/data";
 import { photoUrl } from "@/lib/photo";
 
-type Mini = { title: string; price: string; image: string };
 type Viewer = { name: string } | null;
 const LOGIN = "/login?next=/threads";
 
@@ -24,19 +24,33 @@ function ago(at: number) {
   return `${Math.round(m / 1440)}d`;
 }
 
-const post = (url: string, body: unknown) =>
-  fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+type Props = { initial: Thread[]; initialCursor: string | null; viewer: Viewer };
 
-export default function ThreadFeed({ initial, minis, viewer }: { initial: Thread[]; minis: Record<string, Mini>; viewer: Viewer }) {
+export default function ThreadFeed({ initial, initialCursor, viewer }: Props) {
   const router = useRouter();
   const [threads, setThreads] = useState(initial);
+  const [cursor, setCursor] = useState(initialCursor);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const patch = (id: string, f: (t: Thread) => Thread) => setThreads((ts) => ts.map((t) => (t.id === id ? f(t) : t)));
 
   async function toggleLike(t: Thread) {
     if (!viewer) return router.push(LOGIN);
-    patch(t.id, (x) => ({ ...x, liked: !x.liked, likes: x.likes + (x.liked ? -1 : 1) }));
-    const res = await post(`/api/threads/${t.id}`, { action: "like" });
-    if (res.ok) { const r = await res.json(); patch(t.id, (x) => ({ ...x, ...r })); }
+    // Optimistic: flip now, then settle on the server's count (or undo if it failed).
+    patch(t.id, (x) => ({ ...x, liked: !x.liked, likes: Math.max(0, x.likes + (x.liked ? -1 : 1)) }));
+    const res = await api<{ likes: number; liked: boolean }>(`/threads/${t.id}/like`, { method: t.liked ? "DELETE" : "POST" });
+    patch(t.id, (x) => (res.ok ? { ...x, ...res.data } : { ...x, liked: t.liked, likes: t.likes }));
+  }
+
+  async function loadMore() {
+    if (!cursor) return;
+    setLoadingMore(true);
+    setLoadError("");
+    const res = await api<Thread[]>(`/threads?limit=20&cursor=${encodeURIComponent(cursor)}`);
+    setLoadingMore(false);
+    if (!res.ok) return setLoadError(res.message);
+    setThreads((ts) => [...ts, ...res.data.filter((t) => !ts.some((x) => x.id === t.id))]);
+    setCursor(res.meta?.nextCursor ?? null);
   }
 
   return (
@@ -51,9 +65,18 @@ export default function ThreadFeed({ initial, minis, viewer }: { initial: Thread
         </div>
       )}
       {threads.map((t) => (
-        <ThreadCard key={t.id} t={t} mini={t.productId ? minis[t.productId] : undefined} viewer={viewer}
-          onLike={() => toggleLike(t)} onReply={(r) => patch(t.id, (x) => ({ ...x, replies: [...x.replies, r] }))} />
+        <ThreadCard key={t.id} t={t} viewer={viewer} onLike={() => toggleLike(t)}
+          onReplied={() => patch(t.id, (x) => ({ ...x, replyCount: x.replyCount + 1 }))} />
       ))}
+      {!threads.length && <p className="py-10 text-center text-umber">No threads yet. Start the first one!</p>}
+      {loadError && <p className="text-center text-sm text-terracotta">{loadError}</p>}
+      {cursor && (
+        <div className="text-center">
+          <button onClick={loadMore} disabled={loadingMore} className="rounded-full border border-ink px-6 py-3 text-sm font-semibold disabled:opacity-50">
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -68,10 +91,10 @@ function Composer({ viewer, onPosted }: { viewer: { name: string }; onPosted: (t
     e.preventDefault();
     setBusy(true);
     setError("");
-    const res = await post("/api/threads", { kind, text });
+    const res = await api<Thread>("/threads", { method: "POST", body: { kind, text } });
     setBusy(false);
-    if (!res.ok) return setError("Couldn’t post that. Write a few words and try again.");
-    onPosted(await res.json());
+    if (!res.ok) return setError(res.message);
+    onPosted(res.data);
     setText("");
   }
 
@@ -98,16 +121,36 @@ function Composer({ viewer, onPosted }: { viewer: { name: string }; onPosted: (t
   );
 }
 
-function ThreadCard({ t, mini, viewer, onLike, onReply }: {
-  t: Thread; mini?: Mini; viewer: Viewer; onLike: () => void; onReply: (r: Thread["replies"][number]) => void;
+function ThreadCard({ t, viewer, onLike, onReplied }: {
+  t: Thread; viewer: Viewer; onLike: () => void; onReplied: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [replies, setReplies] = useState<Reply[] | null>(null);
+  const [repliesCursor, setRepliesCursor] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [error, setError] = useState("");
+
+  // Replies are loaded only when a thread is opened, a page at a time.
+  async function loadReplies(cursor?: string) {
+    const res = await api<Reply[]>(`/threads/${t.id}/replies?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+    if (!res.ok) return setError(res.message);
+    setReplies((current) => [...(cursor ? current ?? [] : []), ...res.data]);
+    setRepliesCursor(res.meta?.nextCursor ?? null);
+  }
+
+  function toggleOpen() {
+    setOpen(!open);
+    if (!open && replies === null) loadReplies();
+  }
 
   async function reply(e: React.FormEvent) {
     e.preventDefault();
-    const res = await post(`/api/threads/${t.id}`, { action: "reply", text });
-    if (res.ok) { onReply(await res.json()); setText(""); }
+    setError("");
+    const res = await api<Reply>(`/threads/${t.id}/replies`, { method: "POST", body: { text } });
+    if (!res.ok) return setError(res.message);
+    setReplies((current) => [...(current ?? []), res.data]);
+    setText("");
+    onReplied();
   }
 
   return (
@@ -123,25 +166,30 @@ function ThreadCard({ t, mini, viewer, onLike, onReply }: {
         )}
       </header>
       <p className="mt-3 whitespace-pre-line text-[15px] leading-6">{t.text}</p>
-      {mini && t.productId && (
-        <Link href={`/product/${t.productId}`} className="mt-3 flex items-center gap-3 rounded-lg bg-canvas p-2">
-          <img src={photoUrl(mini.image, 480)} alt="" className="h-16 w-14 rounded object-cover" />
-          <div><p className="font-serif">{mini.title}</p><p className="text-sm font-semibold">{mini.price}</p></div>
+      {t.product && (
+        <Link href={`/product/${t.product.id}`} className="mt-3 flex items-center gap-3 rounded-lg bg-canvas p-2">
+          <img src={photoUrl(t.product.image, 480)} alt="" className="h-16 w-14 rounded object-cover" />
+          <div><p className="font-serif">{t.product.title}</p><p className="text-sm font-semibold">{inr(t.product.price)}</p></div>
         </Link>
       )}
       <div className="mt-3 flex gap-2 text-sm">
         <button onClick={onLike} aria-pressed={t.liked} className={`rounded-full px-3 py-2 ${t.liked ? "bg-terracotta/10 text-terracotta" : "bg-beige"}`}>
           {t.liked ? "♥" : "♡"} {t.likes}
         </button>
-        <button onClick={() => setOpen(!open)} className="rounded-full bg-beige px-3 py-2">
-          💬 {t.replies.length ? `${t.replies.length} ${t.replies.length === 1 ? "reply" : "replies"}` : "Reply"}
+        <button onClick={toggleOpen} aria-expanded={open} className="rounded-full bg-beige px-3 py-2">
+          💬 {t.replyCount ? `${t.replyCount} ${t.replyCount === 1 ? "reply" : "replies"}` : "Reply"}
         </button>
       </div>
       {open && (
         <div className="mt-3 space-y-3 border-t border-line pt-3">
-          {t.replies.map((r, i) => (
-            <div key={i} className="text-sm"><span className="font-semibold">{r.author}</span> <span className="text-umber">· {ago(r.at)}</span><p>{r.text}</p></div>
+          {replies === null && <p className="text-sm text-umber">Loading replies…</p>}
+          {replies?.map((r) => (
+            <div key={r.id} className="text-sm"><span className="font-semibold">{r.author}</span> <span className="text-umber">· {ago(r.at)}</span><p>{r.text}</p></div>
           ))}
+          {repliesCursor && (
+            <button onClick={() => loadReplies(repliesCursor)} className="text-sm font-semibold underline">Show more replies</button>
+          )}
+          {error && <p className="text-sm text-terracotta">{error}</p>}
           {viewer ? (
             <form onSubmit={reply} className="flex gap-2">
               <input required value={text} onChange={(e) => setText(e.target.value)} maxLength={500} placeholder="Write a reply…"

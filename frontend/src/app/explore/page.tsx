@@ -1,7 +1,8 @@
 import Link from "next/link";
+import LoadMoreProducts from "@/components/LoadMoreProducts";
 import ProductCard from "@/components/ProductCard";
-import { categories, cities, conditions } from "@/lib/data";
-import { listProducts } from "@/lib/repo";
+import { categories, cities, conditions, type Page, type Product } from "@/lib/data";
+import { apiGet } from "@/lib/server-api";
 
 type SP = { q?: string; city?: string; category?: string; condition?: string; swap?: string };
 
@@ -9,7 +10,14 @@ export const dynamic = "force-dynamic";
 
 export default async function Explore({ searchParams }: { searchParams: Promise<SP> }) {
   const f = await searchParams;
-  const list = await listProducts({ q: f.q, city: f.city, category: f.category, condition: f.condition, swap: !!f.swap });
+  // Only pass values the API accepts, so a hand-edited URL shows results instead of an error page.
+  const filters = new URLSearchParams({ limit: "20" });
+  if (f.q && f.q.trim().length >= 2) filters.set("q", f.q.trim().slice(0, 60));
+  if (f.city && cities.includes(f.city)) filters.set("city", f.city);
+  if (f.category && categories.includes(f.category)) filters.set("category", f.category);
+  if (f.condition && conditions.includes(f.condition)) filters.set("condition", f.condition);
+  if (f.swap) filters.set("exchange", "true");
+  const { data: list, meta } = await apiGet<Page<Product>>(`/products?${filters}`);
   // Builds a link that keeps current filters but changes one.
   const href = (patch: Partial<SP>) => {
     const sp = new URLSearchParams(Object.entries({ ...f, ...patch }).filter(([, v]) => v) as [string, string][]);
@@ -45,12 +53,13 @@ export default async function Explore({ searchParams }: { searchParams: Promise<
       </div>
 
       <div className="mt-4 flex items-baseline justify-between text-sm text-umber">
-        <span>{list.length} pieces{f.city ? ` in ${f.city}` : ""}</span>
+        <span>{list.length ? `Newest first${f.city ? ` in ${f.city}` : ""}` : ""}</span>
         {(f.q || f.city || f.category || f.condition || f.swap) && <Link href="/explore" className="underline">Clear all</Link>}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
         {list.map((p) => <ProductCard key={p.id} p={p} />)}
       </div>
+      {meta.nextCursor && <LoadMoreProducts key={filters.toString()} query={filters.toString()} cursor={meta.nextCursor} />}
       {!list.length && <p className="py-20 text-center text-umber">Nothing matches yet. Try another city or category.</p>}
     </div>
   );

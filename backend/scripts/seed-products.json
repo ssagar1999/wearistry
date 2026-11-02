@@ -1,0 +1,268 @@
+[
+  {
+    "slug": "indigo-kantha-quilted-jacket",
+    "title": "Indigo Kantha quilted jacket",
+    "category": "Jackets",
+    "size": "M",
+    "condition": "Like new",
+    "price": 3200,
+    "mrp": 5400,
+    "story": "Hand-quilted reversible cotton Kantha with brass buttons.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC5ZvqyJsDkYjiuyr4YzIH0RAM6uQFHf2fuwJr_RqQX5lgxqmfpxM0jIGTicE4i3Cqv9Iklioie0zlR43nWz3ij8R6mAKgQrPWTXuLGNddeDJqS731iZp0TvWJd90V9LMqnRarD4nT6rix1azQ2QOl0Hk5a2dELzJ-b-E7ofIp2-NGbZ2jJdKbqGm4x3-pc6IjsUvZRx7IMoZsyw2ME_f09VLYEZqqlsB_fCxl0QH56",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuC5ZvqyJsDkYjiuyr4YzIH0RAM6uQFHf2fuwJr_RqQX5lgxqmfpxM0jIGTicE4i3Cqv9Iklioie0zlR43nWz3ij8R6mAKgQrPWTXuLGNddeDJqS731iZp0TvWJd90V9LMqnRarD4nT6rix1azQ2QOl0Hk5a2dELzJ-b-E7ofIp2-NGbZ2jJdKbqGm4x3-pc6IjsUvZRx7IMoZsyw2ME_f09VLYEZqqlsB_fCxl0QH56"
+    ],
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "exchange": true,
+    "seller": "Pooja Varma",
+    "sellerSlug": "pooja-varma"
+  },
+  {
+    "slug": "beige-pure-linen-shirt",
+    "title": "Beige pure linen shirt",
+    "category": "Shirts",
+    "size": "L",
+    "condition": "Good",
+    "price": 1450,
+    "mrp": 2600,
+    "story": "Relaxed Italian-cut linen, softened by wear.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC-nB1o86P6sDwQ-F9t7UvZu6vIKjAtKMwyZG8b7kYlsXKnRfCkxOa9GMxJ6rolkSw7Vir7GqgQx8hRINl3k1G072Liur9yw3ewsB0-yU-bbaNL1L6HKonBoMld9wgCl74eRuz06hn_qvLpI9z4QTl0KtMLVCC4qTNLXLIxD6YiDanMDsU1VoN-4sF70War2n4pdFwsUCrxKWKCphj2Xwefdsdxhm9z7M08nIo2SGSQ",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuC-nB1o86P6sDwQ-F9t7UvZu6vIKjAtKMwyZG8b7kYlsXKnRfCkxOa9GMxJ6rolkSw7Vir7GqgQx8hRINl3k1G072Liur9yw3ewsB0-yU-bbaNL1L6HKonBoMld9wgCl74eRuz06hn_qvLpI9z4QTl0KtMLVCC4qTNLXLIxD6YiDanMDsU1VoN-4sF70War2n4pdFwsUCrxKWKCphj2Xwefdsdxhm9z7M08nIo2SGSQ"
+    ],
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "exchange": false,
+    "seller": "The Bombay Attic",
+    "sellerSlug": "the-bombay-attic"
+  },
+  {
+    "slug": "chanderi-mulmul-saree",
+    "title": "Chanderi mulmul saree",
+    "category": "Sarees",
+    "size": "Free size",
+    "condition": "Excellent",
+    "price": 4800,
+    "mrp": 9500,
+    "story": "Handspun chanderi with antique silver border.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuA8gWR77Gr8hfljTQDnYgDGj9fzQgewKXKNWh_qauJ4vlEijoB6KH2dS3UnOXm-OyC1I3JXyI_xhHNdKn_fa4wXSfZ35GSWo_PXgmExAzRS3L39t4eSLdITaRc8TSNm02H9ZTV2L7SyfajkGoeUwK7EXzpdtoVaV3fjS2l3cYQOAeAPxIIz47ENhHhjnKImPOsSP1WWgpmanz-JxCJHQU-neLRp3bmgYNQTXZAT2pMH",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuA8gWR77Gr8hfljTQDnYgDGj9fzQgewKXKNWh_qauJ4vlEijoB6KH2dS3UnOXm-OyC1I3JXyI_xhHNdKn_fa4wXSfZ35GSWo_PXgmExAzRS3L39t4eSLdITaRc8TSNm02H9ZTV2L7SyfajkGoeUwK7EXzpdtoVaV3fjS2l3cYQOAeAPxIIz47ENhHhjnKImPOsSP1WWgpmanz-JxCJHQU-neLRp3bmgYNQTXZAT2pMH"
+    ],
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "exchange": true,
+    "seller": "Aarti Rao",
+    "sellerSlug": "aarti-rao"
+  },
+  {
+    "slug": "90s-faded-indigo-denim-jacket",
+    "title": "90s faded indigo denim jacket",
+    "category": "Jackets",
+    "size": "M",
+    "condition": "Good",
+    "price": 2750,
+    "mrp": 4200,
+    "story": "Embroidered collar, honest fading.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDSEw5sm-Z_BC3-wiMzEb8C0RG_zeMGBWvVW6CItPtRteHiDM3m4Yo9eOy9tRsmCkl8w-T6rH6lnfdOdHJ5NDP_Utjab8004mH49_wuQAtZ7lE3b2Bn6qY5_ojU0tcrTxkSXgUXAMNkBptKWnJIx6mxa-4AGzJEinqzyfsw7x4y_fPqWEQgo10OQdJHJgzz27T90rhxX1HQudBt--9E9f_vSZ-RDiCA0Un4tBcOGv_e",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDSEw5sm-Z_BC3-wiMzEb8C0RG_zeMGBWvVW6CItPtRteHiDM3m4Yo9eOy9tRsmCkl8w-T6rH6lnfdOdHJ5NDP_Utjab8004mH49_wuQAtZ7lE3b2Bn6qY5_ojU0tcrTxkSXgUXAMNkBptKWnJIx6mxa-4AGzJEinqzyfsw7x4y_fPqWEQgo10OQdJHJgzz27T90rhxX1HQudBt--9E9f_vSZ-RDiCA0Un4tBcOGv_e"
+    ],
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "exchange": false,
+    "seller": "Church Street Vintage",
+    "sellerSlug": "church-street-vintage"
+  },
+  {
+    "slug": "raw-mango-zari-dupatta",
+    "title": "Raw Mango zari dupatta",
+    "category": "Dupattas",
+    "size": "Free size",
+    "condition": "Excellent",
+    "price": 3900,
+    "mrp": 8000,
+    "story": "Handwoven brocade with burnished gold zari.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDGWTn2QrMt8iJAeZ_BxUBDoKLSGtHtPhKDGFe6fqZ81oFauBq2F06Ya2DJBeGpHRH1agKQpbgeYp782_KiRfa_8NzzuNEkzcTCmj-j4lJ7Fwko4FDESvwoxZp3QlKw8-iREwLTW25tDhV0F5Eis4y2c27ONRWgyghzXbHcGpe_hyiyI9Q69Wok2g1DYNwvSHSuCqhOWBK3lWGqzBooHjDrc-_5jalEnNo493oEjI3E",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDGWTn2QrMt8iJAeZ_BxUBDoKLSGtHtPhKDGFe6fqZ81oFauBq2F06Ya2DJBeGpHRH1agKQpbgeYp782_KiRfa_8NzzuNEkzcTCmj-j4lJ7Fwko4FDESvwoxZp3QlKw8-iREwLTW25tDhV0F5Eis4y2c27ONRWgyghzXbHcGpe_hyiyI9Q69Wok2g1DYNwvSHSuCqhOWBK3lWGqzBooHjDrc-_5jalEnNo493oEjI3E"
+    ],
+    "city": "Delhi",
+    "state": "Delhi",
+    "exchange": true,
+    "seller": "Meher Kapoor",
+    "sellerSlug": "meher-kapoor"
+  },
+  {
+    "slug": "khadi-cotton-oversized-shirt",
+    "title": "Khadi cotton oversized shirt",
+    "category": "Shirts",
+    "size": "XL",
+    "condition": "Good",
+    "price": 990,
+    "mrp": 1800,
+    "story": "Handspun khadi with coconut buttons.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC1nQZy-x4XL1oRq39zoyMUzNlnfoegWKCy7wroCk2NIwPheMPBmt9YfNXdvTpk145l6T2UNjjbGp4-_b0GV6s8GMBDM7DYAhUX2UhnlPKy6ZRG34OYhAYnTsNDXwMA3alR0QjtEJzg7XGQBsIV7XpMVwAMJoArz7nvE9TR5EmrkGrLM4H4jcscZyaf1YEY37yssgYO87InjJPUgCf4JH5wDntuFf_P1gXlpONvfi6P",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuC1nQZy-x4XL1oRq39zoyMUzNlnfoegWKCy7wroCk2NIwPheMPBmt9YfNXdvTpk145l6T2UNjjbGp4-_b0GV6s8GMBDM7DYAhUX2UhnlPKy6ZRG34OYhAYnTsNDXwMA3alR0QjtEJzg7XGQBsIV7XpMVwAMJoArz7nvE9TR5EmrkGrLM4H4jcscZyaf1YEY37yssgYO87InjJPUgCf4JH5wDntuFf_P1gXlpONvfi6P"
+    ],
+    "city": "Pune",
+    "state": "Maharashtra",
+    "exchange": false,
+    "seller": "Kabir Joshi",
+    "sellerSlug": "kabir-joshi"
+  },
+  {
+    "slug": "levi-s-501-selvedge-jeans",
+    "title": "Levi's 501 selvedge jeans",
+    "category": "Denim",
+    "size": "32",
+    "condition": "Good",
+    "price": 2400,
+    "mrp": 4500,
+    "story": "Straight cut raw selvedge, 90s era.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDT7jMo-pUWSKwXvAzFtkeCY-seJOj5fael-tWW1kGi_FzNSVSwdCt4z32QFsaR7U0HCeOxjksaOPrKCqJvLjqYrw3Q3xjUVngxUKl0sWEsCAfsxhyjTvCa0D08eEWfpN09jYtRgirejsLquVPzlqBP37UrEIW-z2EuH3QYgmxCmiultOtLSHppQP1KFOdvwjnLpjOKUiiZlxMsVp1GIa9l151eOeM44-ezchkW3jN4",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDT7jMo-pUWSKwXvAzFtkeCY-seJOj5fael-tWW1kGi_FzNSVSwdCt4z32QFsaR7U0HCeOxjksaOPrKCqJvLjqYrw3Q3xjUVngxUKl0sWEsCAfsxhyjTvCa0D08eEWfpN09jYtRgirejsLquVPzlqBP37UrEIW-z2EuH3QYgmxCmiultOtLSHppQP1KFOdvwjnLpjOKUiiZlxMsVp1GIa9l151eOeM44-ezchkW3jN4"
+    ],
+    "city": "Delhi",
+    "state": "Delhi",
+    "exchange": true,
+    "seller": "Meher Kapoor",
+    "sellerSlug": "meher-kapoor"
+  },
+  {
+    "slug": "mulberry-silk-corset-top",
+    "title": "Mulberry silk corset top",
+    "category": "Tops",
+    "size": "S",
+    "condition": "Like new",
+    "price": 2100,
+    "mrp": 3800,
+    "story": "Burnt ochre silk with clean boning.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAOCw2VOoSDAVJsOkIBReXUgQc-Jm-7_m7tTTmoo1QjA1lu6hegIp5VosqKHQG4hM9YrO2scl1kgN4oZArfPlbJhprAgxNbmvtKfDh4wL9S1Z1nDBMeycyUy09VoUONS2-IiKLUtbbsx-3Zf_uaBWROkASBkqwsLtwMnpzyR7jQG0Z2qYIcEwWg-rH-DinVPzDoPQzP8LckE1qAk-m91kyY63YqHDpVdoZd5YtegwX0",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAOCw2VOoSDAVJsOkIBReXUgQc-Jm-7_m7tTTmoo1QjA1lu6hegIp5VosqKHQG4hM9YrO2scl1kgN4oZArfPlbJhprAgxNbmvtKfDh4wL9S1Z1nDBMeycyUy09VoUONS2-IiKLUtbbsx-3Zf_uaBWROkASBkqwsLtwMnpzyR7jQG0Z2qYIcEwWg-rH-DinVPzDoPQzP8LckE1qAk-m91kyY63YqHDpVdoZd5YtegwX0"
+    ],
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "exchange": false,
+    "seller": "The Bombay Attic",
+    "sellerSlug": "the-bombay-attic"
+  },
+  {
+    "slug": "linen-tailored-blazer",
+    "title": "Linen tailored blazer",
+    "category": "Jackets",
+    "size": "M",
+    "condition": "Excellent",
+    "price": 2300,
+    "mrp": 4900,
+    "story": "Unstructured sand linen, warm-weather ready.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuD__r6O19J-c8diWkjdLbLY2YxNABcXF8fStu17rdAYZicJ2ntOxnpxImH5Mpa1cGyC18VfJrtaeb6w78KKOKaN-GJRN1yrkuz4-87GRs-o8zli35VtjC59Iu5HY-vC7X8XMz8DeJUESroDfyOZX8wtNM7SARmip6MhPQGKhYLl-A3aSRXQghWdhqTpah2KMCWLy_xLm8HFhI1-ADgdvPv-yNcjsN5trf1hoyjdJ7T_",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuD__r6O19J-c8diWkjdLbLY2YxNABcXF8fStu17rdAYZicJ2ntOxnpxImH5Mpa1cGyC18VfJrtaeb6w78KKOKaN-GJRN1yrkuz4-87GRs-o8zli35VtjC59Iu5HY-vC7X8XMz8DeJUESroDfyOZX8wtNM7SARmip6MhPQGKhYLl-A3aSRXQghWdhqTpah2KMCWLy_xLm8HFhI1-ADgdvPv-yNcjsN5trf1hoyjdJ7T_"
+    ],
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "exchange": true,
+    "seller": "Nisha Reddy",
+    "sellerSlug": "nisha-reddy"
+  },
+  {
+    "slug": "bengal-raw-silk-bomber",
+    "title": "Bengal raw silk bomber",
+    "category": "Jackets",
+    "size": "L",
+    "condition": "Like new",
+    "price": 3600,
+    "mrp": 7000,
+    "story": "Handwoven artisanal bomber.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuArKbGqHEDfVujVcf38EOmJiuT7W-n86lOH6th2E9otKsjG4bu9WHJOj2qD_hcgP-ZEQcwGvwZMZdC7wIifdx4eklMd0sWiR34gF3GZXWV4gICHQb88YidbjiWwsYGDn7LI1nw8OsOopHUBUQVu_raveI8vZSvQvzvMovrUduc21PkcGjI10i5ABO_KKhK8x754AOUDAX7-eZGQTLMlE7LG3H14TiIIQ2bmy7Dniv0I",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuArKbGqHEDfVujVcf38EOmJiuT7W-n86lOH6th2E9otKsjG4bu9WHJOj2qD_hcgP-ZEQcwGvwZMZdC7wIifdx4eklMd0sWiR34gF3GZXWV4gICHQb88YidbjiWwsYGDn7LI1nw8OsOopHUBUQVu_raveI8vZSvQvzvMovrUduc21PkcGjI10i5ABO_KKhK8x754AOUDAX7-eZGQTLMlE7LG3H14TiIIQ2bmy7Dniv0I"
+    ],
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "exchange": false,
+    "seller": "Pooja Varma",
+    "sellerSlug": "pooja-varma"
+  },
+  {
+    "slug": "striped-bowling-shirt",
+    "title": "Striped bowling shirt",
+    "category": "Shirts",
+    "size": "M",
+    "condition": "Good",
+    "price": 780,
+    "mrp": 1400,
+    "story": "Retro boxy cream and olive stripes.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDPK6Sms5NNC5O5XlECSHeUWdvu2E7XQjlNqf7LqlnI4goGBTQFHTlVZGJcFCFrWfaBh4UtRkC2wTZDFJ3GVaai9C5wANbtR2UwutJiA5WcD6isFv_wlAHV6ohdOTG06t0uLMUYGPTnc8jMOJHuEzZlBsGGpIEyrQV3aK5VKzmJ2Dldu5-PeIwyyAH2OVZE-kgr4OeKeEYbwr5ayfS2uSDkExjeO9zCtRpGdX4Hsnpq",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDPK6Sms5NNC5O5XlECSHeUWdvu2E7XQjlNqf7LqlnI4goGBTQFHTlVZGJcFCFrWfaBh4UtRkC2wTZDFJ3GVaai9C5wANbtR2UwutJiA5WcD6isFv_wlAHV6ohdOTG06t0uLMUYGPTnc8jMOJHuEzZlBsGGpIEyrQV3aK5VKzmJ2Dldu5-PeIwyyAH2OVZE-kgr4OeKeEYbwr5ayfS2uSDkExjeO9zCtRpGdX4Hsnpq"
+    ],
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "exchange": true,
+    "seller": "Arjun Menon",
+    "sellerSlug": "arjun-menon"
+  },
+  {
+    "slug": "ajrakh-quilted-crop-jacket",
+    "title": "Ajrakh quilted crop jacket",
+    "category": "Jackets",
+    "size": "S",
+    "condition": "Excellent",
+    "price": 2900,
+    "mrp": 5200,
+    "story": "Hand block print in deep madder.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBJbPQQExSL9sCuSh3cFWJC8mgRBQ8Meo7rscNVSGcPzcafOVMx-dqmFZHBaXyz7bMvJ5fY_jlhyLepazeC2ANze_fJlwOJGRf6bCfhIJiFZfhycV-vBHk5qGZlk8Wq6gmTIsAFI0N_-e-_7yKqoyfTXU6MQiyG1Rn0dam2msUIZp_dhT_ZTak4OlHvt3p1S_4TuaxkFqlAKprofrqc4Akiazvuxa4zDWhTeEw3meif",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBJbPQQExSL9sCuSh3cFWJC8mgRBQ8Meo7rscNVSGcPzcafOVMx-dqmFZHBaXyz7bMvJ5fY_jlhyLepazeC2ANze_fJlwOJGRf6bCfhIJiFZfhycV-vBHk5qGZlk8Wq6gmTIsAFI0N_-e-_7yKqoyfTXU6MQiyG1Rn0dam2msUIZp_dhT_ZTak4OlHvt3p1S_4TuaxkFqlAKprofrqc4Akiazvuxa4zDWhTeEw3meif"
+    ],
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "exchange": false,
+    "seller": "Zoya Khan",
+    "sellerSlug": "zoya-khan"
+  },
+  {
+    "slug": "oxidised-brass-coin-choker",
+    "title": "Oxidised brass coin choker",
+    "category": "Accessories",
+    "size": "Free size",
+    "condition": "Good",
+    "price": 650,
+    "mrp": 1200,
+    "story": "Handcrafted oxidised brass.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuABos9rOeJPVN_i0VhfkWd3YrASgNMVFhPv_RT_8eHUGjep2PB4pcNMGpgtLiM_FWWCsmWXK03pklTmaCHg3jH4HqsnHSJTIut_NSYvPEudzyd1BY0SEOctPWhA2rwIr13TuzDL8ZvOw9xtaCmr6phc0wMu0wG-izkeLjjM7kGojX6Ir-LfWXwy88URcM1AhtYCKf1SkdlvNoDCtB9sgMrmN8JprCVc-C4nUqBJkh6b",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuABos9rOeJPVN_i0VhfkWd3YrASgNMVFhPv_RT_8eHUGjep2PB4pcNMGpgtLiM_FWWCsmWXK03pklTmaCHg3jH4HqsnHSJTIut_NSYvPEudzyd1BY0SEOctPWhA2rwIr13TuzDL8ZvOw9xtaCmr6phc0wMu0wG-izkeLjjM7kGojX6Ir-LfWXwy88URcM1AhtYCKf1SkdlvNoDCtB9sgMrmN8JprCVc-C4nUqBJkh6b"
+    ],
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "exchange": true,
+    "seller": "Aarti Rao",
+    "sellerSlug": "aarti-rao"
+  },
+  {
+    "slug": "dabu-block-print-wrap-skirt",
+    "title": "Dabu block-print wrap skirt",
+    "category": "Skirts",
+    "size": "M",
+    "condition": "Good",
+    "price": 1250,
+    "mrp": 2200,
+    "story": "1990s mud-resist indigo cotton.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDoesP5_Zt4RE61epD3r3oRM6y0stM3juh4IJZauguiuoz2p_gk9HkaxZ-SRuB-_bmvrom84hIhPAAGfnZM7vn1Fh84ZEjPCKu7ZPvrn-DoXXNGQsz7irWuM5BZiDF7r65w8P52GMGZBy-Zc5KZS9wYiuEgeuSm1sJuSr7_fc9rMCfE7WJLkgsrQBoKTOOSmOGFrMUA2CtcXsqD2GDNHk1iYPkYy5hTlab9ykPAfq_G",
+    "images": [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDoesP5_Zt4RE61epD3r3oRM6y0stM3juh4IJZauguiuoz2p_gk9HkaxZ-SRuB-_bmvrom84hIhPAAGfnZM7vn1Fh84ZEjPCKu7ZPvrn-DoXXNGQsz7irWuM5BZiDF7r65w8P52GMGZBy-Zc5KZS9wYiuEgeuSm1sJuSr7_fc9rMCfE7WJLkgsrQBoKTOOSmOGFrMUA2CtcXsqD2GDNHk1iYPkYy5hTlab9ykPAfq_G"
+    ],
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "exchange": false,
+    "seller": "Aarti Rao",
+    "sellerSlug": "aarti-rao"
+  }
+]

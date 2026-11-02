@@ -1,8 +1,7 @@
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import { cities } from "@/lib/data";
-import { listProducts } from "@/lib/repo";
-import { listThreads } from "@/lib/threads";
+import { cities, type Page, type Product, type Thread } from "@/lib/data";
+import { apiGet } from "@/lib/server-api";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +17,10 @@ const steps = [
 ];
 
 export default async function Home() {
-  const [fresh, threads] = await Promise.all([listProducts(), listThreads()]);
+  const [{ data: fresh }, { data: threads }] = await Promise.all([
+    apiGet<Page<Product>>("/products?limit=8"),
+    apiGet<Page<Thread>>("/threads?limit=2"),
+  ]);
   return (
     <>
       <section className="pt-6 md:pt-14">
@@ -48,7 +50,7 @@ export default async function Home() {
           <Link href="/explore" className="text-sm font-semibold underline">See all</Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {fresh.slice(0, 8).map((p) => <ProductCard key={p.id} p={p} />)}
+          {fresh.map((p) => <ProductCard key={p.id} p={p} />)}
         </div>
       </section>
 
@@ -71,11 +73,11 @@ export default async function Home() {
           <Link href="/threads" className="text-sm font-semibold underline">Join in</Link>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          {threads.slice(0, 2).map((t) => (
+          {threads.map((t) => (
             <Link key={t.id} href="/threads" className="rounded-xl border border-line bg-white p-4">
               <p className="text-sm font-semibold">{t.author} <span className="font-normal text-umber">· {t.city}</span></p>
               <p className="mt-1 line-clamp-2 text-[15px]">{t.text}</p>
-              <p className="mt-2 text-xs text-umber">♥ {t.likes} · 💬 {t.replies.length}</p>
+              <p className="mt-2 text-xs text-umber">♥ {t.likes} · 💬 {t.replyCount}</p>
             </Link>
           ))}
         </div>

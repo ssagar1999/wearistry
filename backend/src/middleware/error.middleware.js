@@ -30,6 +30,13 @@ export function toApiError(error) {
     if (error.type === "entity.too.large") {
       return new ApiError(413, ErrorCode.PAYLOAD_TOO_LARGE, "The request body is too large.");
     }
+    // Thrown by multer while reading a multipart upload.
+    if (error.name === "MulterError") {
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return new ApiError(413, ErrorCode.PAYLOAD_TOO_LARGE, "That photo is larger than 15 MB.");
+      }
+      return ApiError.badRequest('Upload one photo at a time in the "file" field.');
+    }
     if (error.code === MONGO_DUPLICATE_KEY) {
       // Only field names are exposed, never the duplicated values.
       const fields = "keyPattern" in error && error.keyPattern ? Object.keys(error.keyPattern) : [];

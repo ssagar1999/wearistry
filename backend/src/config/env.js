@@ -52,6 +52,22 @@ const envSchema = z
     MSG91_TEMPLATE_ID: optionalSecret,
     // Returns OTP codes in the API response instead of sending an SMS. Local development and tests only.
     OTP_DEV_CODES: booleanFlag,
+
+    // Photo storage. With S3_BUCKET + S3_PUBLIC_URL set, photos go to S3 (served by CloudFront);
+    // otherwise they are saved under UPLOAD_DIR and served by this API (development only).
+    AWS_REGION: z.string().default("ap-south-1"),
+    S3_BUCKET: optionalSecret,
+    S3_PUBLIC_URL: z
+      .url({ protocol: /^https?$/ })
+      .optional()
+      .or(z.literal("").transform(() => undefined))
+      .transform((url) => url?.replace(/\/$/, "")),
+    // Only for S3-compatible stores other than AWS (e.g. MinIO, Cloudflare R2).
+    S3_ENDPOINT: z
+      .url()
+      .optional()
+      .or(z.literal("").transform(() => undefined)),
+    UPLOAD_DIR: z.string().default(".data/uploads"),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production" && env.OTP_DEV_CODES) {
@@ -66,6 +82,20 @@ const envSchema = z
         code: "custom",
         path: ["GOOGLE_CLIENT_SECRET"],
         message: "set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither",
+      });
+    }
+    if (Boolean(env.S3_BUCKET) !== Boolean(env.S3_PUBLIC_URL)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["S3_PUBLIC_URL"],
+        message: "set both S3_BUCKET and S3_PUBLIC_URL, or neither",
+      });
+    }
+    if (env.NODE_ENV === "production" && !env.S3_BUCKET) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["S3_BUCKET"],
+        message: "is required in production (local disk storage is lost when a container is replaced)",
       });
     }
     if (Boolean(env.MSG91_AUTH_KEY) !== Boolean(env.MSG91_TEMPLATE_ID)) {

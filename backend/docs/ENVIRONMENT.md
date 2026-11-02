@@ -37,9 +37,17 @@ cp .env.example .env    # then edit .env
 | `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID`      | No (both or neither) | unset                   | SMS for phone login codes. If unset and `OTP_DEV_CODES` is off, sending a code returns 503. Setup: `SMS_SETUP.md`                                                                                          |
 | `OTP_DEV_CODES`                            | No                   | `false`                 | `true` returns login codes in the API response instead of sending SMS. **Refused in production.** Use it in local development only                                                                         |
 
-Photo storage variables get added when uploads move to the API (milestone 3).
+### Photo storage
 
-The web app (`../frontend`) has its own settings: `API_INTERNAL_URL` (where it proxies `/api/v1`, default `http://localhost:4000`) and `NEXT_PUBLIC_GOOGLE_LOGIN=true` to show the Google button.
+| Variable                                     | Required                                | Default         | What it does                                                                                                                                                                 |
+| -------------------------------------------- | --------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `S3_BUCKET`, `S3_PUBLIC_URL`                 | **Yes in production** (both or neither) | unset           | Store photos in S3 and serve them from `S3_PUBLIC_URL` (your CloudFront domain, no trailing slash). Unset in development, so photos go to `UPLOAD_DIR`. Setup: `S3_SETUP.md` |
+| `AWS_REGION`                                 | No                                      | `ap-south-1`    | S3 region (Mumbai)                                                                                                                                                           |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | With S3                                 | unset           | Read directly by the AWS SDK. Use an IAM user that can only `s3:PutObject` to `photos/*`                                                                                     |
+| `S3_ENDPOINT`                                | No                                      | unset           | Only for S3-compatible stores other than AWS (MinIO, Cloudflare R2)                                                                                                          |
+| `UPLOAD_DIR`                                 | No                                      | `.data/uploads` | Local photo folder in development (git-ignored), served at `/api/v1/media/…`                                                                                                 |
+
+The web app (`../frontend`) has only two settings: `API_INTERNAL_URL` (where it proxies `/api/v1`, default `http://localhost:4000`) and `NEXT_PUBLIC_GOOGLE_LOGIN=true` to show the Google button.
 
 ## Development vs production
 

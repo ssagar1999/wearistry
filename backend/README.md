@@ -2,7 +2,7 @@
 
 The REST API for Wearistry, built with **Node.js, Express 5 and MongoDB (Mongoose)** in JavaScript, with types checked by TypeScript.
 
-> **Status: milestone 2 (auth).** The foundation, plus phone OTP and Google sign-in with server-side sessions, and the user profile. The web app uses this API for login and accounts through its `/api/v1` proxy. Listings, uploads and threads move here next (milestone 3).
+> **Status: milestone 3.** The API owns all data: login (phone OTP, Google), sessions, profiles, listings with search and cursor pagination, photo uploads (resized, location stripped, S3 or local), and Threads (feed, replies, likes). The web app is purely a frontend that calls this API through its `/api/v1` proxy.
 
 ## Requirements
 
@@ -16,6 +16,7 @@ cd backend
 npm install
 cp .env.example .env    # then set MONGODB_URI and AUTH_SECRET (see docs/ENVIRONMENT.md)
 npm run migrate         # bring the database schema up to date (see docs/MIGRATIONS.md)
+npm run seed            # optional: sample listings and threads for an empty dev database
 ```
 
 ## Run
@@ -49,20 +50,30 @@ The interactive API docs are at **http://localhost:4000/api/docs** (outside prod
 | `npm run check`                              | Lint + formatting + type check + tests; run before every commit |
 | `npm run migrate` / `npm run migrate:status` | Apply / list pending database migrations                        |
 | `npm run sms:test -- 98765XXXXX`             | Send one real test SMS through MSG91                            |
+| `npm run seed`                               | Fill an empty development database with sample data             |
 
 ## Endpoints
 
-| Method | Path                           | Description                                                           |
-| ------ | ------------------------------ | --------------------------------------------------------------------- |
-| GET    | `/api/v1/health/live`          | Liveness: the process is running                                      |
-| GET    | `/api/v1/health/ready`         | Readiness: the database is connected (503 if not)                     |
-| POST   | `/api/v1/auth/otp/send`        | Send a 6-digit login code to an Indian mobile number                  |
-| POST   | `/api/v1/auth/otp/verify`      | Log in with the code (or add a verified phone to the current account) |
-| GET    | `/api/v1/auth/google/start`    | Start Google sign-in (browser redirect)                               |
-| GET    | `/api/v1/auth/google/callback` | Google returns here; sets the session                                 |
-| GET    | `/api/v1/auth/me`              | The logged-in user                                                    |
-| POST   | `/api/v1/auth/logout`          | Log out                                                               |
-| PATCH  | `/api/v1/users/me`             | Update name and city                                                  |
+| Method        | Path                           | Description                                                           |
+| ------------- | ------------------------------ | --------------------------------------------------------------------- |
+| GET           | `/api/v1/health/live`          | Liveness: the process is running                                      |
+| GET           | `/api/v1/health/ready`         | Readiness: the database is connected (503 if not)                     |
+| POST          | `/api/v1/auth/otp/send`        | Send a 6-digit login code to an Indian mobile number                  |
+| POST          | `/api/v1/auth/otp/verify`      | Log in with the code (or add a verified phone to the current account) |
+| GET           | `/api/v1/auth/google/start`    | Start Google sign-in (browser redirect)                               |
+| GET           | `/api/v1/auth/google/callback` | Google returns here; sets the session                                 |
+| GET           | `/api/v1/auth/me`              | The logged-in user                                                    |
+| POST          | `/api/v1/auth/logout`          | Log out                                                               |
+| PATCH         | `/api/v1/users/me`             | Update name and city                                                  |
+| GET           | `/api/v1/products`             | Browse and search listings (cursor-paginated), or fetch by `ids`      |
+| GET           | `/api/v1/products/:id`         | One listing                                                           |
+| POST          | `/api/v1/products`             | Create a listing (verified phone required)                            |
+| POST          | `/api/v1/uploads`              | Upload one photo → URL                                                |
+| GET           | `/api/v1/media/:file`          | Local photo sizes (development)                                       |
+| GET           | `/api/v1/threads`              | Community feed (cursor-paginated)                                     |
+| POST          | `/api/v1/threads`              | Post a thread                                                         |
+| POST / DELETE | `/api/v1/threads/:id/like`     | Like / unlike                                                         |
+| GET / POST    | `/api/v1/threads/:id/replies`  | List / add replies                                                    |
 
 Details and examples: `/api/docs` and [API_CONVENTIONS.md](docs/API_CONVENTIONS.md).
 
@@ -83,3 +94,4 @@ Details and examples: `/api/docs` and [API_CONVENTIONS.md](docs/API_CONVENTIONS.
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md)                 | Release steps, health checks, logging, scaling, rollback            |
 | [GOOGLE_OAUTH_SETUP.md](docs/GOOGLE_OAUTH_SETUP.md) | Creating the Google OAuth client                                    |
 | [SMS_SETUP.md](docs/SMS_SETUP.md)                   | MSG91 and DLT setup for SMS codes                                   |
+| [S3_SETUP.md](docs/S3_SETUP.md)                     | S3 bucket, CloudFront and IAM for photo storage                     |

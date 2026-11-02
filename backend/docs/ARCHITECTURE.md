@@ -2,7 +2,7 @@
 
 The Wearistry API is a **modular monolith**: one Express process, organised into self-contained feature modules. It is the backend for the Next.js app in `../frontend`.
 
-> **Status (milestone 2):** the foundation, plus the `auth` module (phone OTP, Google sign-in, sessions) and the `users` module (profile). The web app uses this API for all login and account features through its `/api/v1` proxy. Listings, uploads and threads still run in the web app's own Next.js API routes until milestone 3.
+> **Status (milestone 3):** the API owns all data and business logic: `auth` (phone OTP, Google sign-in, sessions), `users`, `products`, `uploads` (photo pipeline and storage) and `threads` (feed, replies, likes). The web app is purely a frontend. It has no database access and no API routes of its own, and calls this API through its `/api/v1` proxy.
 
 ## Why a modular monolith
 
@@ -30,15 +30,19 @@ backend/
 │   ├── modules/         One folder per feature
 │   │   ├── health/        Liveness and readiness checks (the simplest reference module)
 │   │   ├── auth/          OTP, Google sign-in, sessions: models, services, controller, routes, docs
-│   │   └── users/         User model, user service (shared by auth), profile endpoint
+│   │   ├── users/         User model, user service (shared by auth), profile endpoint
+│   │   ├── products/      Listings: model, cursor-paginated browse, search, create
+│   │   ├── uploads/       Photo pipeline (multer → sharp → S3 or local disk) and the local media route
+│   │   └── threads/       Feed, replies and likes: three models (threads, thread_replies, thread_likes)
 │   ├── docs/            OpenAPI document built from module docs + shared schemas
 │   ├── types/           Type declarations (adds req.id and req.validated to Express)
 │   ├── utils/
-│   │   └── api-error.js   ApiError class and stable error codes
+│   │   ├── api-error.js   ApiError class and stable error codes
+│   │   └── pagination.js  Cursor pagination helper (encode/decode, "after cursor" filter, page slicing)
 │   ├── app.js           Builds the Express app (no network); used by server.js and tests
 │   └── server.js        Process entry: env → logger → DB → HTTP server → graceful shutdown
 ├── migrations/          Versioned schema migrations (see MIGRATIONS.md)
-├── scripts/             CLI helpers: migrate.js, test-sms.js
+├── scripts/             CLI helpers: migrate.js, seed.js (+ seed-products.json), test-sms.js
 ├── tests/
 │   ├── unit/            Pure functions and middleware in isolation
 │   ├── integration/     HTTP requests through the real app against an in-memory MongoDB
@@ -65,6 +69,7 @@ The `health` module is the reference. A feature module adds files as it needs th
 ```
 HTTP request
   → requestId            assigns req.id, echoes X-Request-Id
+  (/api/v1/media/*       photos: served here, before the rate limiter, cache forever)
   → pino-http            one log line per request (health checks skipped)
   → helmet               security headers
   → cors                 allow-list of browser origins, credentials allowed
@@ -101,7 +106,7 @@ Browser ──► Next.js (APP_URL, e.g. localhost:3000)
 ```
 
 - **The browser only talks to the web app's origin.** The `wearistry_sid` cookie is first-party, no CORS is involved, and Google redirects back to our own domain (`APP_URL/api/v1/auth/google/callback`), which the proxy forwards to the API.
-- **Server-rendered pages** (e.g. the header and `/account`) call `GET /api/v1/auth/me` on `API_INTERNAL_URL`, passing the browser's cookie (`frontend/src/lib/session.ts`). The web app never reads or creates sessions itself.
+- **Server-rendered pages** call the API directly on `API_INTERNAL_URL`, passing the browser's cookie (`frontend/src/lib/server-api.ts` and `session.ts`). Interactive parts (likes, replies, "Load more", saved items, selling) call `/api/v1` from the browser through the proxy (`frontend/src/lib/api.ts`). The web app never touches the database.
 - **The proxy forwards `Origin` and `Cookie` and adds `X-Forwarded-For`,** so set `TRUST_PROXY_HOPS=1` for this setup.
 
 ## Key decisions

@@ -6,8 +6,8 @@ India's easy pre-loved fashion marketplace: buy, sell and swap clothes, plus Thr
 
 | Folder | What it is | Start here |
 | --- | --- | --- |
-| [`frontend/`](frontend/) | Next.js 15 web app (TypeScript, Tailwind) | [frontend/README.md](frontend/README.md) |
-| [`backend/`](backend/) | Express 5 API (Node.js, MongoDB). Foundation done; features are being moved here from the frontend | [backend/README.md](backend/README.md) |
+| [`frontend/`](frontend/) | Next.js 15 web app (TypeScript, Tailwind). Frontend only; talks to the API | [frontend/README.md](frontend/README.md) |
+| [`backend/`](backend/) | Express 5 API (Node.js, MongoDB): all data and logic (login, listings, photos, threads) | [backend/README.md](backend/README.md) |
 
 Other files at the root:
 

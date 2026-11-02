@@ -33,8 +33,9 @@ Two ways to log in. Both end with the same kind of session.
 
 - **`loadSession`** attaches `req.user` for valid sessions. **`requireUser`** rejects anonymous requests with `401 UNAUTHENTICATED`.
 - **Users can only read and change their own account** (`/auth/me` and `PATCH /users/me` act on `req.user`, never on an ID from the client).
-- **Ownership checks for listings and threads** move into services with those modules (milestone 3). Rule: authentication ("who are you?") and authorization ("may you do this?") are separate checks, and being logged in never implies permission.
-- **Business rule:** selling requires a verified phone. The web app enforces this today; the API will when listings move there.
+- **Listings** record `sellerId` from the session, never from the request body (strict schemas reject extra fields). Threads and replies take the author from the session too.
+- **Business rules in services:** selling requires a verified phone and a name (`403`), and posting or replying requires a name.
+- **No update or delete endpoints exist yet.** When they're added, ownership (`sellerId` / `authorId` = `req.user.id`) must be checked in the service. Rule: authentication and authorization are separate checks.
 
 ## CSRF: Implemented
 
@@ -70,6 +71,15 @@ Two ways to log in. Both end with the same kind of session.
 - **All input is parsed by strict Zod schemas** in `validate()`. Controllers read typed values with `validated(req, part, schema)`.
 - **Phone numbers are normalised and checked** to be Indian mobiles. Codes must be exactly 6 digits. Unknown fields and operator objects (`{ "$gt": "" }`) are rejected (tested).
 - **Mongoose adds `sanitizeFilter` and `strictQuery`.** Server-written operators must use `mongoose.trusted()` (see `DATABASE.md`).
+
+## Photo uploads: Implemented
+
+- **Login required,** plus the Origin check. Limited to **80 uploads per user per hour,** because image processing is CPU-heavy.
+- **Size and count:** files up to **15 MB**, one per request, held in memory (multer). Nothing unprocessed is written to disk.
+- **Content check:** sharp checks the file's real format, regardless of its name or `Content-Type`: JPEG, PNG, WebP, AVIF, HEIF or TIFF only. It also caps decoded size at 60 megapixels (decompression-bomb protection).
+- **Privacy:** every photo is re-encoded, which **strips all metadata, including GPS location** (tested). A seller's home address can't leak through photo EXIF.
+- **Only our own photo URLs can go on a listing:** `/api/v1/media/<uuid>` or `S3_PUBLIC_URL/photos/<uuid>`. That blocks hot-linking or tracking pixels from other sites.
+- **The local media route** only serves strictly named files (`<uuid>-<480|960|1600>.webp`), so there's no path traversal (tested). In production photos are on S3 behind CloudFront, and the API never serves files.
 
 ## Security headers, size limits, safe errors and logging: Implemented
 

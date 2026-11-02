@@ -73,6 +73,13 @@ describe("app-wide behaviour", () => {
       "/api/v1/auth/otp/verify",
       "/api/v1/health/live",
       "/api/v1/health/ready",
+      "/api/v1/media/{file}",
+      "/api/v1/products",
+      "/api/v1/products/{id}",
+      "/api/v1/threads",
+      "/api/v1/threads/{id}/like",
+      "/api/v1/threads/{id}/replies",
+      "/api/v1/uploads",
       "/api/v1/users/me",
     ]);
     expect(res.body.components.schemas.ErrorResponse).toBeDefined();
@@ -80,7 +87,12 @@ describe("app-wide behaviour", () => {
   });
 
   it("does not serve API docs in production", async () => {
-    const { app: prodApp } = buildTestApp({ NODE_ENV: "production", OTP_DEV_CODES: "false" });
+    const { app: prodApp } = buildTestApp({
+      NODE_ENV: "production",
+      OTP_DEV_CODES: "false",
+      S3_BUCKET: "test-bucket",
+      S3_PUBLIC_URL: "https://photos.example.test",
+    });
     await request(prodApp).get("/api/docs.json").expect(404);
   });
 });

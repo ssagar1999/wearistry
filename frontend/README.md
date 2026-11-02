@@ -1,12 +1,16 @@
-# Wearistry (कथा)
+# Wearistry web app
 
-India's easy pre-loved fashion marketplace: buy, sell and swap clothes, plus Threads for showing finds, asking for pieces and offering swaps. Prices in ₹, shipping within India only.
+The website for Wearistry, India's easy pre-loved fashion marketplace: buy, sell and swap clothes, plus Threads for showing finds, asking for pieces and offering swaps. Prices in ₹, shipping within India only.
 
-Built with Next.js 15, TypeScript, Tailwind CSS, MongoDB (Mongoose), sharp for photo optimisation, MSG91 for phone OTP login and Amazon S3 + CloudFront for photo storage.
+Built with **Next.js 15, TypeScript and Tailwind CSS**. This app is **only the frontend**: it has no database and no API routes. All data and logic (login, listings, photos, threads) live in the [backend API](../backend/README.md), which this app reaches through a proxy:
+
+- The browser calls `/api/v1/*` on this site, and `next.config.ts` forwards those requests to the API, so cookies stay first-party.
+- Server-rendered pages call the API directly (`src/lib/server-api.ts`), forwarding the visitor's cookie.
+- Interactive parts (likes, replies, "Load more", saved items, selling) call `/api/v1` from the browser (`src/lib/api.ts`).
 
 ## Run it
 
-**Dev mode.** Login and accounts come from the backend API, so start it first (see [backend/README.md](../backend/README.md)):
+Start the API first (see [backend/README.md](../backend/README.md)):
 
 ```bash
 cd ../backend && npm run dev     # API on http://localhost:4000
@@ -19,26 +23,32 @@ npm install
 npm run dev                      # web app on http://localhost:3000
 ```
 
-Open http://localhost:3000. Listings and threads still live in this app until they move to the API; without `MONGODB_URI` they're kept in memory.
+Open http://localhost:3000. With an empty development database, run `npm run seed` in `backend/` for sample listings and threads.
 
-**With Docker** (the app plus a real MongoDB), from the repo root:
-
-```bash
-docker compose up --build
-```
-
-New to Docker? Start with [teachdockerfile.md](../teachdockerfile.md).
+New to Docker? Start with [teachdockerfile.md](../teachdockerfile.md). Running the full stack (API + web app + MongoDB) in Docker comes in milestone 4.
 
 ## Settings
 
-Copy `.env.example` to `.env.local` and fill in what you need. Everything is optional in dev mode.
+Copy `.env.example` to `.env`. There are only two settings:
 
-| Feature | Settings | Guide |
+| Setting | Default | What it does |
 | --- | --- | --- |
-| Database | `MONGODB_URI` | MongoDB Atlas connection string |
-| Backend API | `API_INTERNAL_URL` (default `http://localhost:4000`) | Login and accounts are handled by the API; see [backend/README.md](../backend/README.md) |
-| Google button | `NEXT_PUBLIC_GOOGLE_LOGIN=true` | Turn on once the backend has Google keys |
-| Photo storage | `AWS_*`, `S3_BUCKET`, `S3_PUBLIC_URL` | [docs/S3_SETUP.md](docs/S3_SETUP.md) |
+| `API_INTERNAL_URL` | `http://localhost:4000` | Where the API runs, as seen from this server. Used by the proxy (read at build time) and by server-side requests |
+| `NEXT_PUBLIC_GOOGLE_LOGIN` | `false` | `true` shows **Continue with Google** on the login page. Turn it on once the API has Google keys |
+
+Login codes, Google keys, the database and photo storage are all configured in the API.
+
+## Where things are
+
+| Path | What |
+| --- | --- |
+| `src/app/` | Pages: home, explore, product, seller, saved, sell, threads, login, account, exchange |
+| `src/components/` | UI pieces: product card, gallery, photo picker (compresses in the browser), thread feed, login flow |
+| `src/lib/api.ts` | Browser calls to `/api/v1` (errors become readable messages) |
+| `src/lib/server-api.ts` | Server-side calls to the API |
+| `src/lib/session.ts` | "Who is logged in?" (asks the API's `/auth/me`) |
+| `src/lib/data.ts` | API types and the fixed lists (cities, categories, sizes, conditions) |
+| `src/lib/photo.ts` | Builds the photo URL for each size (480, 960 and 1600 px) |
 
 ## Scripts
 

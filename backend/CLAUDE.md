@@ -53,5 +53,5 @@ Database scalability is one of this project's highest priorities. These are stan
 
 1. ~~Foundation~~ (done)
 2. ~~Auth~~ (done): Google OIDC (PKCE, state, nonce), phone OTP, MongoDB sessions, Origin-check CSRF, `requireUser`; the frontend proxies `/api/v1/*` to the API.
-3. Products, uploads (multer + sharp + S3) and threads move from `../frontend/src/lib`, with cursor pagination. Threads' embedded `replies` and `likedBy` arrays become `thread_replies` and `thread_likes` collections (see docs/SCALABILITY.md). Then remove the Next.js API routes.
+3. ~~Products, uploads, threads~~ (done): cursor pagination, thread_replies and thread_likes collections, photo pipeline (sharp, S3 or local); the frontend has no DB or API routes. Pending: migrations 002 and 003 on Atlas (need approval), then a later 004 contract migration (legacy arrays and indexes).
 4. Backend Dockerfile, compose service, deployment docs, and a new lesson in `../teachdockerfile.md`.

@@ -61,7 +61,7 @@ Shard **collections**, not the whole database. Small collections stay unsharded 
 
 Tiny and short-lived (10-minute TTL). If ever needed, use `{ stateHash: 1 }`: random values, and the only query uses it.
 
-### `products` (milestone 3): candidate `{ sellerId: 1, _id: 1 }` vs `{ _id: "hashed" }` (decide with real query data)
+### `products`: candidate `{ _id: "hashed" }` vs `{ sellerId: 1, _id: 1 }` (decide with real query data)
 
 |              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,13 +70,17 @@ Tiny and short-lived (10-minute TTL). If ever needed, use `{ stateHash: 1 }`: ra
 | Options      | **`{ _id: "hashed" }`:** even writes, targeted single-listing reads; browse queries scatter to all shards (acceptable if they're index-backed and limited to 20–50 results). **`{ sellerId: 1, _id: 1 }`:** seller pages and shop management are targeted; very large sellers could create jumbo chunks. **`{ city: 1, … }`:** good locality for city browsing, but low cardinality (a handful of big cities) and uneven distribution (Mumbai or Delhi hotspots) |
 | Leaning      | `{ _id: "hashed" }` for simplicity, unless seller-scoped queries dominate. Not a timestamp or ObjectId as a _ranged_ key, which would mean monotonic inserts and a hotspot                                                                                                                                                                                                                                                                                       |
 
-### `threads` → `thread_replies` and `thread_likes` (milestone 3)
+### `threads`, `thread_replies` and `thread_likes`
 
 | Collection       | Candidate                    | Why                                                                                                                                               |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `threads`        | `{ _id: "hashed" }`          | Feed reads scatter but are bounded. Single-thread reads are targeted                                                                              |
 | `thread_replies` | `{ threadId: 1, _id: 1 }`    | Replies are always read per thread, so that's targeted. A viral thread's replies stay together, which is good for reading (bounded by pagination) |
 | `thread_likes`   | `{ threadId: 1, userId: 1 }` | Matches the unique "one like per user" index, so uniqueness survives sharding                                                                     |
+
+**Note on `products` unique slug:** the `slug` unique index can't be enforced across shards unless it's the shard key prefix. Options on that day: shard on `{ slug: "hashed" }` (single-listing reads stay targeted, and browse scatters as above), or keep slug uniqueness probabilistic (slugs include time plus random bytes) and drop the unique constraint. Decide together with the shard key.
+
+**Note on the browse indexes:** today's compound indexes begin with `status` (low cardinality). That's right for a single replica set, where they serve the queries perfectly. If `products` is sharded, they stay as secondary indexes on each shard, and browse queries become scatter-gather (bounded by `limit`).
 
 ## Rules this imposes on code today
 

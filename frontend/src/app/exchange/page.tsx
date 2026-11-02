@@ -1,8 +1,11 @@
-import { products } from "@/lib/data";
+import type { Page, Product } from "@/lib/data";
+import { apiGet } from "@/lib/server-api";
+
+export const dynamic = "force-dynamic";
 
 export default async function Exchange({ searchParams }: { searchParams: Promise<{ item?: string }> }) {
   const { item } = await searchParams;
-  const swappable = products.filter((p) => p.exchange);
+  const { data: swappable } = await apiGet<Page<Product>>("/products?exchange=true&limit=50");
   return (
     <div className="max-w-xl py-8">
       <h1 className="font-serif text-[28px] md:text-4xl">Propose a swap</h1>

@@ -2,7 +2,8 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import PhotoPicker from "./PhotoPicker";
-import { categories, cities, conditions, sizes } from "@/lib/data";
+import { api } from "@/lib/api";
+import { categories, cities, conditions, sizes, type Product } from "@/lib/data";
 
 export default function SellForm({ defaultCity }: { defaultCity?: string }) {
   const [state, setState] = useState<{ id?: string; error?: string; busy?: boolean }>({});
@@ -16,10 +17,9 @@ export default function SellForm({ defaultCity }: { defaultCity?: string }) {
     if (!photos.urls.length) return setState({ error: "Add at least one photo." });
     if (photos.busy) return setState({ error: "Wait for your photos to finish uploading." });
     setState({ busy: true });
-    const res = await fetch("/api/products", {
+    const res = await api<Product>("/products", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      body: {
         title: d.get("title"),
         category: d.get("category"),
         size: d.get("size"),
@@ -30,10 +30,9 @@ export default function SellForm({ defaultCity }: { defaultCity?: string }) {
         story: d.get("story"),
         exchange: d.get("exchange") === "on",
         images: photos.urls,
-      }),
+      },
     });
-    const json = await res.json();
-    setState(res.ok ? { id: json.id ?? json._id } : { error: "Please check the title, price and city." });
+    setState(res.ok ? { id: res.data.id } : { error: res.message });
   }
 
   if (state.id)

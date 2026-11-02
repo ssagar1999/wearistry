@@ -13,6 +13,10 @@ import { requestId } from "./middleware/request-id.middleware.js";
 import { requireTrustedOrigin } from "./middleware/trusted-origin.middleware.js";
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { createProductsRouter } from "./modules/products/product.routes.js";
+import { threadsRouter } from "./modules/threads/thread.routes.js";
+import { createMediaStorage } from "./modules/uploads/media.storage.js";
+import { createMediaRouter, createUploadsRouter } from "./modules/uploads/upload.routes.js";
 import { usersRouter } from "./modules/users/user.routes.js";
 
 /** @typedef {import("./config/env.js").Env} Env */
@@ -64,6 +68,10 @@ export function createApp({ env, logger, googleClient }) {
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(cookieParser());
 
+  const media = createMediaStorage(env);
+  // Photos are requested many times per page; they're immutable and cached, so they skip the API rate limit.
+  app.use("/api/v1/media", createMediaRouter({ media }));
+
   const api = express.Router();
   api.use(createRateLimiter({ windowMs: env.RATE_LIMIT_WINDOW_MS, limit: env.RATE_LIMIT_MAX }));
   api.use("/health", healthRouter);
@@ -71,6 +79,9 @@ export function createApp({ env, logger, googleClient }) {
   api.use(loadSession);
   api.use("/auth", createAuthRouter({ env, logger, googleClient }));
   api.use("/users", usersRouter);
+  api.use("/products", createProductsRouter({ media }));
+  api.use("/uploads", createUploadsRouter({ media }));
+  api.use("/threads", threadsRouter);
   app.use("/api/v1", api);
 
   if (env.NODE_ENV !== "production") {

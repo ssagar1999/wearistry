@@ -1,6 +1,6 @@
 # Setting up photo storage (Amazon S3 + CloudFront)
 
-Uploaded photos are saved in 3 sizes (480, 960 and 1600 px wide, WebP). Without S3 settings, dev mode keeps them in `.data/uploads` on your computer. A live site needs S3, and the server refuses uploads in production without it.
+The API saves every uploaded photo in 3 sizes (480, 960 and 1600 px wide, WebP). Without S3 settings, development keeps them in `backend/.data/uploads`. In production the API refuses to start without S3, because a container's disk is lost when it's replaced.
 
 Use the **Mumbai region (`ap-south-1`)** so photos are stored close to your users. Put **CloudFront** in front of the bucket, which serves photos from edge locations in Indian cities and makes them load faster.
 
@@ -47,7 +47,7 @@ The app only needs to **upload** photos, so give it nothing more:
 
 ## 4. Add the settings
 
-In `.env.local` (and later in your host's environment settings):
+In `backend/.env` (and later in your host's environment settings):
 
 ```
 AWS_REGION=ap-south-1
@@ -57,15 +57,15 @@ S3_BUCKET=wearistry-photos
 S3_PUBLIC_URL=https://d1234abcd.cloudfront.net
 ```
 
-`S3_PUBLIC_URL` has no trailing slash. Restart `npm run dev`, upload a photo on **Sell**, and check that the photo shows up and that its address starts with your CloudFront domain.
+`S3_PUBLIC_URL` has no trailing slash. Restart the API (`npm run dev` in `backend/`), upload a photo on **Sell**, and check that the photo shows up and that its address starts with your CloudFront domain.
 
 Never commit these keys, and never put them in code. If a key leaks, delete it in IAM and create a new one.
 
 ## If it fails
 
-| Problem | What to check |
-| --- | --- |
+| Problem                                                                        | What to check                                                           |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | Upload says "Couldn't save that photo" and the server log shows `AccessDenied` | The IAM policy's bucket name and the `photos/*` path match `S3_BUCKET`. |
-| `InvalidAccessKeyId` / `SignatureDoesNotMatch` | The keys were copied completely, with no extra spaces. |
-| Upload works but the photo is broken (403) | The CloudFront OAC bucket policy is saved on the bucket. |
-| Photo is broken (404) right after creating CloudFront | Wait 5–10 minutes for the distribution to finish deploying. |
+| `InvalidAccessKeyId` / `SignatureDoesNotMatch`                                 | The keys were copied completely, with no extra spaces.                  |
+| Upload works but the photo is broken (403)                                     | The CloudFront OAC bucket policy is saved on the bucket.                |
+| Photo is broken (404) right after creating CloudFront                          | Wait 5–10 minutes for the distribution to finish deploying.             |
