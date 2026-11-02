@@ -30,6 +30,12 @@ const envSchema = z
     MONGODB_URI: z.string().regex(/^mongodb(\+srv)?:\/\//, "must start with mongodb:// or mongodb+srv://"),
     CORS_ORIGINS: commaSeparatedOrigins.default(["http://localhost:3000"]),
     LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
+    // Readable, coloured logs. Defaults to on in development only. Needs the pino-pretty dev dependency,
+    // so containers (which install production dependencies only) set it to false and log JSON.
+    LOG_PRETTY: z
+      .enum(["true", "false", "1", "0"])
+      .optional()
+      .transform((value) => (value === undefined ? undefined : value === "true" || value === "1")),
     // Number of reverse proxies in front of the API (e.g. 1 for the Next.js proxy or a load balancer).
     // Express needs this to read the real client IP for rate limiting; trusting too many hops lets clients spoof it.
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),

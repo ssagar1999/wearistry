@@ -17,7 +17,7 @@ export const REDACTED_PATHS = [
 ];
 
 /**
- * @param {Pick<Env, "NODE_ENV" | "LOG_LEVEL">} env
+ * @param {Pick<Env, "NODE_ENV" | "LOG_LEVEL" | "LOG_PRETTY">} env
  * @returns {import("pino").Logger}
  */
 export function createLogger(env) {
@@ -25,9 +25,9 @@ export function createLogger(env) {
     level: env.LOG_LEVEL,
     base: { service: "wearistry-api" },
     redact: { paths: REDACTED_PATHS, censor: "[redacted]" },
-    // Human-readable output while developing; one JSON object per line in production for log tools.
+    // Human-readable output while developing; one JSON object per line elsewhere, for log tools.
     transport:
-      env.NODE_ENV === "development"
+      (env.LOG_PRETTY ?? env.NODE_ENV === "development")
         ? { target: "pino-pretty", options: { translateTime: "HH:MM:ss", ignore: "pid,hostname,service" } }
         : undefined,
   });

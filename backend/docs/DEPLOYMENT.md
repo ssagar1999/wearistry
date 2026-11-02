@@ -1,6 +1,21 @@
 # Deployment
 
-> **Status (milestone 3):** the API runs in production mode (`npm start`) with health checks, JSON logs, graceful shutdown and versioned migrations. A backend Dockerfile and a compose service are planned for milestone 4. The repo's current `compose.yaml` runs only the frontend and MongoDB.
+> **Status (milestone 4):** the API ships as a Docker image (`backend/Dockerfile`). `compose.yaml` at the repo root runs the full stack locally: MongoDB, a one-off migration step, the API and the web app. The steps below apply with or without Docker.
+
+## Docker image
+
+```bash
+docker build -t wearistry-api ./backend
+```
+
+- **Two stages:** production packages only (`npm ci --omit=dev`), then a slim Node 24 image running as a non-root user.
+- **Contents:** only `src/`, `migrations/` and `scripts/` are copied. No tests, docs or `.env`.
+- **Built-in liveness check:** `HEALTHCHECK` calls `GET /api/v1/health/live`.
+- **Logging:** the image doesn't contain `pino-pretty`, so keep `LOG_PRETTY` unset (production logs JSON anyway) or `false`.
+- **Migrations:** run them as a one-off container before starting the new version: `docker run --rm --env-file prod.env wearistry-api node scripts/migrate.js up`. Locally, compose does this with its `migrate` service.
+- **The web app** (`frontend/Dockerfile`) needs `API_INTERNAL_URL` as a **build argument**, because the `/api/v1` proxy target is baked into the build. Set it again as a runtime environment variable for server-rendered pages.
+
+The local stack and every compose setting are explained in `../../teachdockerfile.md` (Lesson 7).
 
 ## Build
 

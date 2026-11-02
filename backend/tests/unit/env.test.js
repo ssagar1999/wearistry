@@ -73,6 +73,12 @@ describe("parseEnv", () => {
     ).toBeUndefined();
   });
 
+  it("leaves LOG_PRETTY unset unless given, and parses it strictly", () => {
+    expect(parseEnv(minimal).LOG_PRETTY).toBeUndefined();
+    expect(parseEnv({ ...minimal, LOG_PRETTY: "false" }).LOG_PRETTY).toBe(false);
+    expect(() => parseEnv({ ...minimal, LOG_PRETTY: "maybe" })).toThrow(EnvValidationError);
+  });
+
   it("rejects an unknown NODE_ENV", () => {
     expect(() => parseEnv({ ...minimal, NODE_ENV: "staging" })).toThrow(EnvValidationError);
   });

@@ -1,0 +1,11 @@
+# Not copied into the image: keeps it small, fast to build and free of secrets.
+node_modules
+.data
+.env*
+!.env.example
+coverage
+tests
+docs
+*.log
+Dockerfile
+.dockerignore

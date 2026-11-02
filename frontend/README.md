@@ -25,7 +25,7 @@ npm run dev                      # web app on http://localhost:3000
 
 Open http://localhost:3000. With an empty development database, run `npm run seed` in `backend/` for sample listings and threads.
 
-New to Docker? Start with [teachdockerfile.md](../teachdockerfile.md). Running the full stack (API + web app + MongoDB) in Docker comes in milestone 4.
+To run everything (MongoDB, API and web app) with Docker instead, use `docker compose up --build` from the repo root. See [teachdockerfile.md](../teachdockerfile.md).
 
 ## Settings
 

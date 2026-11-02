@@ -36,6 +36,10 @@ You should get `{"data":{"status":"ok","checks":{"database":"up"}}}`.
 
 The interactive API docs are at **http://localhost:4000/api/docs** (outside production only).
 
+## Run with Docker (whole stack)
+
+From the repo root: `docker compose up --build`, then open http://localhost:3000. That starts MongoDB, runs migrations, then the API (http://localhost:4000/api/docs) and the web app. Sample data: `docker compose run --rm api node scripts/seed.js`. Step-by-step guide: [teachdockerfile.md](../teachdockerfile.md).
+
 ## Scripts
 
 | Command                                      | What it does                                                    |

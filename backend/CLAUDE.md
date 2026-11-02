@@ -54,4 +54,4 @@ Database scalability is one of this project's highest priorities. These are stan
 1. ~~Foundation~~ (done)
 2. ~~Auth~~ (done): Google OIDC (PKCE, state, nonce), phone OTP, MongoDB sessions, Origin-check CSRF, `requireUser`; the frontend proxies `/api/v1/*` to the API.
 3. ~~Products, uploads, threads~~ (done): cursor pagination, thread_replies and thread_likes collections, photo pipeline (sharp, S3 or local); the frontend has no DB or API routes. Pending: migrations 002 and 003 on Atlas (need approval), then a later 004 contract migration (legacy arrays and indexes).
-4. Backend Dockerfile, compose service, deployment docs, and a new lesson in `../teachdockerfile.md`.
+4. ~~Docker~~ (done): `backend/Dockerfile` (prod deps only, non-root, healthcheck), compose with mongo → migrate → api → web, Lesson 7 in `../teachdockerfile.md`. Next: real deployment (AWS Mumbai), Redis for shared rate limits, contract migration 004.

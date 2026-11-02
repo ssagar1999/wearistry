@@ -1,25 +1,14 @@
-# Runs Wearistry and a MongoDB database together with one command: docker compose up --build
-# Run it from the repo root (the folder that contains frontend/).
-# Explained step by step in teachdockerfile.md.
+# The whole Wearistry stack on your computer with one command, from the repo root:
+#   docker compose up --build
+# Then open http://localhost:3000. Explained step by step in teachdockerfile.md (Lesson 7).
+#
+# Start-up order:
+#   mongo (healthy) → migrate (runs once, exits) → api (healthy) → web
+#
+# This is a LOCAL setup: login codes appear on screen and photos are stored in a Docker volume.
+# Production uses real secrets, MSG91 SMS and S3 (see backend/docs/DEPLOYMENT.md).
 
 services:
-  web:
-    build: ./frontend
-    ports:
-      - "3000:3000" # your computer's port : the container's port
-    environment:
-      MONGODB_URI: mongodb://mongo:27017/wearistry # "mongo" is the database service's name below
-      AUTH_SECRET: ${AUTH_SECRET:-local-docker-secret-change-me}
-      # Local mode: login codes show on screen and photos are saved in the uploads volume.
-      # Never set this on the real live site.
-      DEV_MODE: "true"
-    volumes:
-      - uploads:/app/.data/uploads
-    depends_on:
-      mongo:
-        condition: service_healthy
-    restart: unless-stopped
-
   mongo:
     image: mongo:8
     ports:
@@ -33,6 +22,65 @@ services:
       retries: 12
     restart: unless-stopped
 
+  # Applies pending database migrations, then exits. The API waits for it to finish successfully.
+  migrate:
+    build: ./backend
+    command: ["node", "scripts/migrate.js", "up"]
+    environment: &api-env
+      NODE_ENV: development # local mode: dev login codes allowed, cookies work on plain http://localhost
+      LOG_PRETTY: "false" # the image has no pretty-printer; log JSON
+      MONGODB_URI: mongodb://mongo:27017/wearistry # "mongo" is the database service's name above
+      AUTH_SECRET: ${AUTH_SECRET:-local-docker-secret-change-me-32-chars-min}
+      APP_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      TRUST_PROXY_HOPS: "1" # requests arrive through the web app's /api/v1 proxy
+      OTP_DEV_CODES: "true" # login codes are shown on screen instead of sent by SMS. Never in production.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: ./backend
+    environment: *api-env # the same settings as migrate (a YAML anchor: written once, used twice)
+    ports:
+      - "127.0.0.1:4000:4000" # optional: lets you open http://localhost:4000/api/docs
+    volumes:
+      - uploads:/app/.data/uploads # uploaded photos survive rebuilds and restarts
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/api/v1/health/ready').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the build: the web app forwards /api/v1/* to the "api" service.
+        API_INTERNAL_URL: http://api:4000
+        NEXT_PUBLIC_GOOGLE_LOGIN: ${NEXT_PUBLIC_GOOGLE_LOGIN:-false}
+    environment:
+      API_INTERNAL_URL: http://api:4000 # used by server-rendered pages at request time
+    ports:
+      - "3000:3000" # your computer's port : the container's port
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
-  uploads: # uploaded photos survive restarts
-  mongo-data: # database survives restarts
+  mongo-data: # the database
+  uploads: # photos uploaded through Sell
