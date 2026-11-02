@@ -64,13 +64,23 @@ describe("app-wide behaviour", () => {
 
   it("serves the OpenAPI document outside production, listing only real endpoints", async () => {
     const res = await request(app).get("/api/docs.json").expect(200);
-    expect(Object.keys(res.body.paths).sort()).toEqual(["/api/v1/health/live", "/api/v1/health/ready"]);
+    expect(Object.keys(res.body.paths).sort()).toEqual([
+      "/api/v1/auth/google/callback",
+      "/api/v1/auth/google/start",
+      "/api/v1/auth/logout",
+      "/api/v1/auth/me",
+      "/api/v1/auth/otp/send",
+      "/api/v1/auth/otp/verify",
+      "/api/v1/health/live",
+      "/api/v1/health/ready",
+      "/api/v1/users/me",
+    ]);
     expect(res.body.components.schemas.ErrorResponse).toBeDefined();
     expect(res.body.paths["/api/v1/health/live"].get.responses["429"]).toBeDefined();
   });
 
   it("does not serve API docs in production", async () => {
-    const { app: prodApp } = buildTestApp({ NODE_ENV: "production" });
+    const { app: prodApp } = buildTestApp({ NODE_ENV: "production", OTP_DEV_CODES: "false" });
     await request(prodApp).get("/api/docs.json").expect(404);
   });
 });

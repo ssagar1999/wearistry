@@ -14,6 +14,7 @@ These rules add to the repo-wide engineering standards in `../CLAUDE.md`. Read `
 
 - `npm run check`: lint + Prettier check + type check + tests. **Must pass before you say a change is done.** Report the real results.
 - `npm run dev`: local server on :4000 (loads `.env`).
+- `npm run migrate:status` / `npm run migrate`: database migrations (ask before running against a real database).
 - `npx prettier --write .`: format after editing.
 
 ## Rules
@@ -30,9 +31,27 @@ These rules add to the repo-wide engineering standards in `../CLAUDE.md`. Read `
 - **Never read or print real secrets** from `.env`. Tests must never use a real database URI.
 - **Before adding a dependency,** explain why it's needed. Prefer Node built-ins. Install scripts are denied by default (`allowScripts` in `package.json`).
 
+## Database rules (non-negotiable)
+
+Database scalability is one of this project's highest priorities. These are standing rules, not suggestions.
+
+**Before creating or changing any model, collection, relationship, query, pagination or filter:**
+
+1. Work out the real access patterns: how documents are created, read, updated and deleted, which queries are most frequent or expensive, and which collections will grow large or take heavy reads or writes. Don't design from the UI shape.
+2. Decide **embed vs reference** deliberately. Embed only small, bounded data that belongs to one parent and is read with it. Reference anything unbounded, shared, many-to-many, or independently queried. **Never embed unbounded arrays** (comments, likes, logs, notifications, messages). Remember the 16 MB document limit.
+3. Add indexes **only for real queries:** compound indexes in ESR order (Equality, Sort, Range), unique indexes for real uniqueness, partial indexes where values are optional, TTL indexes for expiring data. No redundant indexes; each one costs writes and memory. Validate important queries with `explain("executionStats")`.
+4. **Bound every query:** cursor pagination for growing lists (`limit` ≤ 50), projections, `.lean()`, no N+1, no unbounded `populate`, never load whole collections.
+5. **Integrity:** Zod at the edge; unique indexes rather than check-then-insert; atomic operators with conditions for counters and limits; never assume two operations are atomic; transactions only when multi-document atomicity is truly required.
+6. **Future sharding:** give every important collection a documented candidate shard key (cardinality, distribution, hotspot risk, query targeting, unique-index implications). Don't default to `_id`, a hashed key, or a timestamp. Designing for sharding ≠ enabling it; stay on an indexed replica set until metrics justify more.
+7. **Evolve safely:** backward-compatible changes (expand → migrate → contract), versioned and idempotent migrations in `migrations/` with a test, and never rename, remove or redefine a production field without a migration plan. Never run destructive operations on a real database without explicit approval.
+8. **Mongoose:** small focused models, explicit documented indexes, no business logic in schemas, no unnecessary plugins. Server-written filter operators need `mongoose.trusted()` because `sanitizeFilter` is on.
+9. **If a design raises a real scalability concern, explain it before implementing.** Prefer the simplest design that scales; don't add infrastructure today's needs don't justify.
+
+**After any database change, update:** `docs/DATABASE.md` (collections, relationships, embed/reference decisions, indexes, query costs), `docs/SCALABILITY.md` (growth, bottlenecks), `docs/SHARDING_STRATEGY.md` (shard key) and `docs/MIGRATIONS.md` (if a migration was added). Explain decisions in plain language.
+
 ## Roadmap (agreed)
 
 1. ~~Foundation~~ (done)
-2. Auth: Google OAuth2/OIDC via `openid-client` (PKCE, state, nonce), phone OTP moved from the frontend, MongoDB sessions in an httpOnly cookie, Origin-check CSRF, `requireUser`. The frontend proxies `/api/v1/*` to the API.
-3. Products, uploads (multer + sharp + S3) and threads move from `../frontend/src/lib`, with cursor pagination. Then remove the Next.js API routes.
+2. ~~Auth~~ (done): Google OIDC (PKCE, state, nonce), phone OTP, MongoDB sessions, Origin-check CSRF, `requireUser`; the frontend proxies `/api/v1/*` to the API.
+3. Products, uploads (multer + sharp + S3) and threads move from `../frontend/src/lib`, with cursor pagination. Threads' embedded `replies` and `likedBy` arrays become `thread_replies` and `thread_likes` collections (see docs/SCALABILITY.md). Then remove the Next.js API routes.
 4. Backend Dockerfile, compose service, deployment docs, and a new lesson in `../teachdockerfile.md`.

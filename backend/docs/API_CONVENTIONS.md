@@ -45,7 +45,7 @@ These rules apply to every endpoint. The interactive reference is generated from
 | 500  | Unexpected server error                | `INTERNAL_ERROR`    |
 | 503  | Dependency down (readiness check)      | none (see Health)   |
 
-All codes in this table are defined in `src/utils/api-error.js` and produced by `src/middleware/error.middleware.js`. `UNAUTHENTICATED` and `FORBIDDEN` will be used by the auth module (milestone 2). Error codes are a contract with clients: **never rename one; add a new one.**
+All codes in this table are defined in `src/utils/api-error.js` and produced by `src/middleware/error.middleware.js`. `401 UNAUTHENTICATED` is returned for a missing or expired session, and for a wrong or expired OTP code. `403 FORBIDDEN` is returned when a state-changing request doesn't come from the web app's origin. `409 CONFLICT` covers a phone already linked to another account. `503 SERVICE_UNAVAILABLE` means Google or SMS login isn't configured, or the SMS provider failed. Error codes are a contract with clients: **never rename one; add a new one.**
 
 ## Response format
 
@@ -100,6 +100,23 @@ Growing collections (listings, threads) will use **cursor pagination**, which st
 | `GET /api/v1/health/ready` | Can serve traffic (database connected) | `200 { data: { status: "ok", checks: { database: "up" } } }` or `503` with `"unavailable"` / `"down"` |
 
 Readiness returns `503` with a `data` body, not an `error`, because "not ready" is an expected state that load balancers poll for.
+
+## Authentication
+
+- **Logged-in requests carry the `wearistry_sid` cookie** (httpOnly). Browsers send it automatically through the web app's `/api/v1` proxy.
+- **State-changing requests** (POST, PATCH, PUT, DELETE) must include an `Origin` header matching the web app. Browsers do this automatically; scripts and tests must set it.
+- **Browser-navigation endpoints** (`/auth/google/start`, `/auth/google/callback`) answer with `302` redirects, never JSON, including on errors (`/login?error=…`).
+- **`429` responses for login codes** may include `details.retryAfterSeconds`.
+
+| Method | Path                                       | Auth              | Purpose                                                                  |
+| ------ | ------------------------------------------ | ----------------- | ------------------------------------------------------------------------ |
+| POST   | `/api/v1/auth/otp/send`                    | none              | Send a login code `{ phone }`                                            |
+| POST   | `/api/v1/auth/otp/verify`                  | none (or session) | Log in `{ phone, code }`. With a session, adds the phone to that account |
+| GET    | `/api/v1/auth/google/start?returnTo=/path` | none              | Redirect to Google                                                       |
+| GET    | `/api/v1/auth/google/callback`             | none              | Google returns here. Sets the session and redirects                      |
+| GET    | `/api/v1/auth/me`                          | session           | The logged-in user                                                       |
+| POST   | `/api/v1/auth/logout`                      | optional          | End this session (`204`)                                                 |
+| PATCH  | `/api/v1/users/me`                         | session           | Update `{ name, city }`                                                  |
 
 ## Headers
 

@@ -2,7 +2,7 @@
 
 The REST API for Wearistry, built with **Node.js, Express 5 and MongoDB (Mongoose)** in JavaScript, with types checked by TypeScript.
 
-> **Status: milestone 1 (foundation).** The server, configuration, logging, security middleware, error handling, health checks, API docs and test setup are done. Feature endpoints (Google and phone login, listings, photo uploads, threads) come next. Until then, the frontend uses its own Next.js API routes.
+> **Status: milestone 2 (auth).** The foundation, plus phone OTP and Google sign-in with server-side sessions, and the user profile. The web app uses this API for login and accounts through its `/api/v1` proxy. Listings, uploads and threads move here next (milestone 3).
 
 ## Requirements
 
@@ -14,7 +14,8 @@ The REST API for Wearistry, built with **Node.js, Express 5 and MongoDB (Mongoos
 ```bash
 cd backend
 npm install
-cp .env.example .env    # then set MONGODB_URI (see docs/ENVIRONMENT.md)
+cp .env.example .env    # then set MONGODB_URI and AUTH_SECRET (see docs/ENVIRONMENT.md)
+npm run migrate         # bring the database schema up to date (see docs/MIGRATIONS.md)
 ```
 
 ## Run
@@ -36,33 +37,49 @@ The interactive API docs are at **http://localhost:4000/api/docs** (outside prod
 
 ## Scripts
 
-| Command                                   | What it does                                                    |
-| ----------------------------------------- | --------------------------------------------------------------- |
-| `npm run dev`                             | Start with `node --watch` and `.env`                            |
-| `npm start`                               | Start for production                                            |
-| `npm test`                                | Run all tests (in-memory MongoDB, never your real database)     |
-| `npm run test:watch`                      | Re-run tests on change                                          |
-| `npm run lint`                            | ESLint                                                          |
-| `npm run format` / `npm run format:check` | Prettier write / check                                          |
-| `npm run typecheck`                       | Strict type check of JS via JSDoc (`tsc -p jsconfig.json`)      |
-| `npm run check`                           | Lint + formatting + type check + tests; run before every commit |
+| Command                                      | What it does                                                    |
+| -------------------------------------------- | --------------------------------------------------------------- |
+| `npm run dev`                                | Start with `node --watch` and `.env`                            |
+| `npm start`                                  | Start for production                                            |
+| `npm test`                                   | Run all tests (in-memory MongoDB, never your real database)     |
+| `npm run test:watch`                         | Re-run tests on change                                          |
+| `npm run lint`                               | ESLint                                                          |
+| `npm run format` / `npm run format:check`    | Prettier write / check                                          |
+| `npm run typecheck`                          | Strict type check of JS via JSDoc (`tsc -p jsconfig.json`)      |
+| `npm run check`                              | Lint + formatting + type check + tests; run before every commit |
+| `npm run migrate` / `npm run migrate:status` | Apply / list pending database migrations                        |
+| `npm run sms:test -- 98765XXXXX`             | Send one real test SMS through MSG91                            |
 
 ## Endpoints
 
-| Method | Path                   | Description                                       |
-| ------ | ---------------------- | ------------------------------------------------- |
-| GET    | `/api/v1/health/live`  | Liveness: the process is running                  |
-| GET    | `/api/v1/health/ready` | Readiness: the database is connected (503 if not) |
+| Method | Path                           | Description                                                           |
+| ------ | ------------------------------ | --------------------------------------------------------------------- |
+| GET    | `/api/v1/health/live`          | Liveness: the process is running                                      |
+| GET    | `/api/v1/health/ready`         | Readiness: the database is connected (503 if not)                     |
+| POST   | `/api/v1/auth/otp/send`        | Send a 6-digit login code to an Indian mobile number                  |
+| POST   | `/api/v1/auth/otp/verify`      | Log in with the code (or add a verified phone to the current account) |
+| GET    | `/api/v1/auth/google/start`    | Start Google sign-in (browser redirect)                               |
+| GET    | `/api/v1/auth/google/callback` | Google returns here; sets the session                                 |
+| GET    | `/api/v1/auth/me`              | The logged-in user                                                    |
+| POST   | `/api/v1/auth/logout`          | Log out                                                               |
+| PATCH  | `/api/v1/users/me`             | Update name and city                                                  |
+
+Details and examples: `/api/docs` and [API_CONVENTIONS.md](docs/API_CONVENTIONS.md).
 
 ## Documentation
 
-| Doc                                             | Read it for                                                         |
-| ----------------------------------------------- | ------------------------------------------------------------------- |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md)         | Folder structure, module anatomy, request flow, key decisions       |
-| [API_CONVENTIONS.md](docs/API_CONVENTIONS.md)   | URLs, methods, status codes, response and error formats, pagination |
-| [DATABASE.md](docs/DATABASE.md)                 | Connection, Mongoose settings, indexing, query rules, migrations    |
-| [SECURITY.md](docs/SECURITY.md)                 | What's protected today and what's planned (auth, CSRF)              |
-| [TESTING.md](docs/TESTING.md)                   | Test strategy, the in-memory database, how to write tests           |
-| [ENVIRONMENT.md](docs/ENVIRONMENT.md)           | Every environment variable, dev vs prod, safe configuration         |
-| [CODING_STANDARDS.md](docs/CODING_STANDARDS.md) | Naming, file layout, JSDoc types, error handling, review checklist  |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md)             | Release steps, health checks, logging, scaling, rollback            |
+| Doc                                                 | Read it for                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md)             | Folder structure, module anatomy, request flow, key decisions       |
+| [API_CONVENTIONS.md](docs/API_CONVENTIONS.md)       | URLs, methods, status codes, response and error formats, pagination |
+| [DATABASE.md](docs/DATABASE.md)                     | Collections, relationships, indexes, query costs, integrity rules   |
+| [SCALABILITY.md](docs/SCALABILITY.md)               | Growth estimates, bottlenecks, scaling path                         |
+| [SHARDING_STRATEGY.md](docs/SHARDING_STRATEGY.md)   | Future shard key per collection and why                             |
+| [MIGRATIONS.md](docs/MIGRATIONS.md)                 | Versioned schema migrations and safe change process                 |
+| [SECURITY.md](docs/SECURITY.md)                     | Auth, sessions, CSRF, rate limits, validation, data exposure        |
+| [TESTING.md](docs/TESTING.md)                       | Test strategy, the in-memory database, how to write tests           |
+| [ENVIRONMENT.md](docs/ENVIRONMENT.md)               | Every environment variable, dev vs prod, safe configuration         |
+| [CODING_STANDARDS.md](docs/CODING_STANDARDS.md)     | Naming, file layout, JSDoc types, error handling, review checklist  |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md)                 | Release steps, health checks, logging, scaling, rollback            |
+| [GOOGLE_OAUTH_SETUP.md](docs/GOOGLE_OAUTH_SETUP.md) | Creating the Google OAuth client                                    |
+| [SMS_SETUP.md](docs/SMS_SETUP.md)                   | MSG91 and DLT setup for SMS codes                                   |

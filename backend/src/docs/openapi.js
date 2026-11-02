@@ -1,5 +1,7 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from "@asteasolutions/zod-to-openapi";
+import { registerAuthDocs } from "../modules/auth/auth.docs.js";
 import { registerHealthDocs } from "../modules/health/health.docs.js";
+import { registerUserDocs } from "../modules/users/user.docs.js";
 
 /**
  * Builds the OpenAPI document from the same Zod schemas used for validation, so the docs describe
@@ -8,6 +10,8 @@ import { registerHealthDocs } from "../modules/health/health.docs.js";
 export function buildOpenApiDocument() {
   const registry = new OpenAPIRegistry();
   registerHealthDocs(registry);
+  registerAuthDocs(registry);
+  registerUserDocs(registry);
 
   return new OpenApiGeneratorV31(registry.definitions).generateDocument({
     openapi: "3.1.0",

@@ -12,5 +12,5 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src", "tests", "vitest.config.js", "eslint.config.js"]
+  "include": ["src", "tests", "scripts", "migrations", "vitest.config.js", "eslint.config.js"]
 }

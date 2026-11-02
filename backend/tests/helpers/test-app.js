@@ -7,6 +7,9 @@ import { parseEnv } from "../../src/config/env.js";
 
 const silentLogger = pino({ level: "silent" });
 
+/** The web app origin tests pretend to be; browsers send it as `Origin` on POST/PATCH/DELETE. */
+export const TEST_APP_URL = "http://localhost:3000";
+
 /**
  * Test configuration. Each test file gets its own database on the shared in-memory server,
  * so files can run in parallel without seeing each other's data.
@@ -20,15 +23,23 @@ export function testEnv(overrides = {}) {
     NODE_ENV: "test",
     MONGODB_URI: base.toString(),
     CORS_ORIGINS: "http://localhost:3000",
+    APP_URL: TEST_APP_URL,
+    AUTH_SECRET: "test-secret-that-is-at-least-32-characters-long",
+    OTP_DEV_CODES: "true",
+    // Tests send many login requests from one IP; the login limiter itself is tested with a low value.
+    AUTH_RATE_LIMIT_MAX: "10000",
     LOG_LEVEL: "silent",
     ...overrides,
   });
 }
 
-/** @param {Record<string, string>} [envOverrides] */
-export function buildTestApp(envOverrides) {
+/**
+ * @param {Record<string, string>} [envOverrides]
+ * @param {{ googleClient?: import("../../src/modules/auth/google.client.js").GoogleClient }} [deps]
+ */
+export function buildTestApp(envOverrides, deps = {}) {
   const env = testEnv(envOverrides);
-  return { app: createApp({ env, logger: silentLogger }), env, logger: silentLogger };
+  return { app: createApp({ env, logger: silentLogger, ...deps }), env, logger: silentLogger };
 }
 
 /** @param {string} uri */

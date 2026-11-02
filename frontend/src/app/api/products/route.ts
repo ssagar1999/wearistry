@@ -26,6 +26,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user?.name) return NextResponse.json({ error: "Please log in to sell." }, { status: 401 });
+  if (!user.phone) return NextResponse.json({ error: "Add a verified phone number to sell." }, { status: 403 });
   const parsed = body.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json(parsed.error.flatten(), { status: 400 });
   const d = parsed.data;

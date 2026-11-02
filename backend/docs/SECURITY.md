@@ -2,82 +2,96 @@
 
 Each item is marked as either **Implemented** (it exists in the code and is tested) or **Planned** (it isn't built yet).
 
-## Authentication: Planned (milestone 2)
+## Authentication: Implemented
 
-The agreed design (not implemented yet):
+Two ways to log in. Both end with the same kind of session.
 
-- **Sign in with Google** (OAuth 2.0 / OpenID Connect) using `openid-client`, a certified library. It uses the Authorization Code flow with **PKCE**, plus `state` and `nonce` checks and ID-token validation. We never hand-write OAuth crypto.
-- **Phone OTP** (moved from the frontend) as a second login option. A verified phone number is required before selling.
-- **Sessions:** after login, the API creates a random, opaque session ID and stores the session in MongoDB with an automatic expiry (TTL index). That makes sessions revocable on logout or theft.
-- **The session cookie is `httpOnly`, `Secure` in production, `SameSite=Lax` and `Path=/`.** JavaScript can't read it, and it isn't sent on cross-site POSTs.
-- **No passwords are stored:** Google and OTP logins have none, so there's nothing to hash. If email-and-password login is ever added, use **argon2id**.
+**Phone OTP** (`modules/auth/otp.service.js`):
 
-## Authorization: Planned (milestone 2)
+- **A 6-digit code from a cryptographically secure random source** (`crypto.randomInt`), valid for 5 minutes.
+- **Only a keyed hash is stored:** HMAC-SHA256 with `AUTH_SECRET`. A database leak doesn't reveal codes, and 6-digit hashes can't be brute-forced offline without the secret.
+- **Per-phone limits:** one code every 30 s and 5 per hour, enforced atomically in MongoDB (works across API instances), plus 5 verify attempts per code. Each attempt is counted atomically, and a code works **once**, even if submitted twice at the same moment (tested).
+- **Per-IP login limit:** `AUTH_RATE_LIMIT_MAX` requests per 15 minutes (default 30) on all login endpoints.
+- **SMS goes through MSG91.** `OTP_DEV_CODES=true` returns the code in the response for local development, and the server **refuses to start** with it in production.
 
-- **A `requireUser` middleware** rejects anonymous requests with `401 UNAUTHENTICATED`.
-- **Ownership checks live in services**, not routes. For example, only a listing's seller can edit it, and anyone else gets `403 FORBIDDEN`.
-- **Authentication and authorization are reviewed separately:** being logged in never implies being allowed.
+**Google sign-in** (`modules/auth/google.service.js`, `google.client.js`):
 
-## CSRF: Planned (milestone 2)
+- **OAuth 2.0 Authorization Code flow with PKCE (S256) and OpenID Connect,** using `openid-client`, a certified library. It validates the ID token's signature, issuer, audience, expiry and **nonce**. We never hand-write OAuth crypto.
+- **`state` is bound to the browser:** it's stored server-side (hashed) and also set in a short-lived `httpOnly` cookie scoped to the callback path. The callback requires both to match, which blocks **login CSRF** (an attacker logging you into their account). States are single-use and expire after 10 minutes (tested).
+- **Users are matched by Google's stable `sub`, never by email.** Email is stored only when Google marks it verified.
+- **Redirect target after login:** `returnTo` must be a path on our own site (`/…`, not `//…` or containing `\`), otherwise it becomes `/`. That prevents open redirects (tested).
+- **Failures redirect to `/login?error=…`** without details. The reason is logged server-side.
 
-Cookie-based auth needs CSRF protection. The plan has two layers:
+**Sessions** (`modules/auth/session.service.js`):
 
-1. **The `SameSite=Lax` cookie** isn't sent on cross-site `POST`, `PATCH` or `DELETE` requests.
-2. **An `Origin` header check** on every state-changing request: it must match `CORS_ORIGINS`.
+- **A random 256-bit token in the `wearistry_sid` cookie.** Only its SHA-256 hash is stored in `sessions`, so stolen database rows can't be used as cookies.
+- **Cookie settings:** `httpOnly` (page scripts can't read it; checked in the browser), `SameSite=Lax`, `Secure` in production and `Path=/`. Expiry is `SESSION_TTL_DAYS` (default 30).
+- **Server-side and revocable:** logout deletes the session row. Expired sessions are rejected immediately, and MongoDB's TTL index removes them.
+- **No passwords exist,** so nothing is hashed with bcrypt or argon2. If email-and-password login is ever added, use argon2id.
 
-Together these cover modern browsers without CSRF tokens.
+## Authorization: Implemented (foundation)
+
+- **`loadSession`** attaches `req.user` for valid sessions. **`requireUser`** rejects anonymous requests with `401 UNAUTHENTICATED`.
+- **Users can only read and change their own account** (`/auth/me` and `PATCH /users/me` act on `req.user`, never on an ID from the client).
+- **Ownership checks for listings and threads** move into services with those modules (milestone 3). Rule: authentication ("who are you?") and authorization ("may you do this?") are separate checks, and being logged in never implies permission.
+- **Business rule:** selling requires a verified phone. The web app enforces this today; the API will when listings move there.
+
+## CSRF: Implemented
+
+1. **The `SameSite=Lax` session cookie** isn't sent on cross-site POST, PATCH, PUT or DELETE requests.
+2. **`requireTrustedOrigin`** (`middleware/trusted-origin.middleware.js`): every state-changing `/api/v1` request must carry an `Origin` (or `Referer`) matching `APP_URL` or `CORS_ORIGINS`, otherwise it gets `403 FORBIDDEN`. Browsers always send `Origin` on these requests and pages can't forge it. Tested, including a logged-in request from another site being refused.
 
 ## Environment secrets: Implemented
 
-- **Secrets live only in environment variables** (`.env` locally, the host's secret settings in production). They are never in code.
-- **`.env` is git-ignored.** Only `.env.example`, which has no real values, is committed.
-- **Startup validation never prints values,** only which variables are wrong (`src/config/env.js`, with a test).
-- **Rotate a credential immediately** if it ever appears in a chat, a ticket, a log or a commit.
+- **Secrets live only in environment variables** (`.env` locally, the platform's secret settings in production). `.env` is git-ignored.
+- **`AUTH_SECRET`** must be at least 32 characters. Rotating it invalidates pending OTP codes and in-progress Google sign-ins, but **not** existing sessions.
+- **Startup validation never prints values.**
+- **Rotate any credential immediately** if it appears in a chat, a ticket, a log or a commit.
 
 ## CORS: Implemented
 
-- **Only origins listed in `CORS_ORIGINS`** get `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials: true`.
-- **Other origins get no CORS headers,** so the browser blocks them from reading responses.
-- **Requests without an `Origin` header** (server-to-server, curl, health checks) aren't subject to CORS and are allowed.
-- **Never use `*` with credentials,** and never reflect arbitrary origins.
+- **Only `CORS_ORIGINS`** get `Access-Control-Allow-Origin` with credentials. Others get no CORS headers.
+- **In normal use the browser never needs CORS:** it calls the web app, which proxies `/api/v1` to the API (same origin).
 
 ## Rate limiting: Implemented
 
-- **Every `/api/v1` route is limited per IP:** `RATE_LIMIT_MAX` requests per `RATE_LIMIT_WINDOW_MS` (default 120 per minute). Over the limit, it returns `429 RATE_LIMITED` with standard `RateLimit` headers.
-- **`TRUST_PROXY_HOPS`** must equal the number of proxies in front of the API, so the real client IP is used. Setting it too high lets clients fake their IP with `X-Forwarded-For`.
-- **Counters are in memory, per instance.** Running several instances needs a shared store (Redis) so the limits apply across all of them.
-- **Planned:** stricter per-route limits for login and OTP endpoints (milestone 2).
+| Limit                                                        | Scope                        | Where            |
+| ------------------------------------------------------------ | ---------------------------- | ---------------- |
+| `RATE_LIMIT_MAX` per `RATE_LIMIT_WINDOW_MS` (120 per minute) | Per IP, all `/api/v1` routes | In memory        |
+| `AUTH_RATE_LIMIT_MAX` per 15 min (30)                        | Per IP, login endpoints      | In memory        |
+| 1 code per 30 s, 5 per hour                                  | Per phone                    | MongoDB (atomic) |
+| 5 attempts per code                                          | Per code                     | MongoDB (atomic) |
 
-## Request size limits: Implemented
-
-JSON bodies are capped at **100 KB**, and larger ones get `413 PAYLOAD_TOO_LARGE`. **Planned:** photo uploads get their own limit (15 MB, milestone 3).
+- **`TRUST_PROXY_HOPS` must match the real proxy chain** (1 behind the Next.js proxy), or limits apply to the wrong IP.
+- **In-memory counters are per instance.** Move them to Redis before running several instances (see `SCALABILITY.md`).
 
 ## Input validation and NoSQL injection: Implemented
 
-- **All client input is parsed with Zod** in the `validate` middleware. Handlers read only `req.validated`.
-- **Use `.strict()` object schemas,** so unknown fields and operator objects like `{ "$ne": null }` are rejected (tested).
-- **Mongoose adds two more defences:** `sanitizeFilter: true` and `strictQuery: true` (see `DATABASE.md`).
-- **Never build queries from raw `req.body` or `req.query`.**
+- **All input is parsed by strict Zod schemas** in `validate()`. Controllers read typed values with `validated(req, part, schema)`.
+- **Phone numbers are normalised and checked** to be Indian mobiles. Codes must be exactly 6 digits. Unknown fields and operator objects (`{ "$gt": "" }`) are rejected (tested).
+- **Mongoose adds `sanitizeFilter` and `strictQuery`.** Server-written operators must use `mongoose.trusted()` (see `DATABASE.md`).
 
-## Security headers: Implemented
+## Security headers, size limits, safe errors and logging: Implemented
 
-Helmet sets `Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options`, `Referrer-Policy` and others. `X-Powered-By` is removed (tested).
+- **Helmet** sets the security headers, and `X-Powered-By` is removed.
+- **JSON bodies are capped at 100 KB.**
+- **Clients see only `ApiError` messages.** Unexpected errors become a generic 500. MSG91 and Google error details stay in server logs (tested).
+- **Logs redact** cookies, `Authorization`, `Set-Cookie`, and fields named `password`, `token`, `accessToken`, `refreshToken`, `idToken` and `otp`. Request logs contain only the ID, method, URL and IP. OTP codes are never logged.
 
-## Safe errors and logging: Implemented
+## Data exposure
 
-- **Clients only ever see an `ApiError` message.** Anything unexpected becomes a generic `500 INTERNAL_ERROR`, with no stack traces, queries or driver messages (tested).
-- **Duplicate-key errors** reveal field names, never values (tested).
-- **Logs redact** `Cookie`, `Authorization` and `Set-Cookie` headers and any `password`, `passwordHash`, `token`, `accessToken`, `refreshToken`, `idToken` or `otp` fields (`src/config/logger.js`). Request logs include only the ID, method, URL and IP.
-- **Never log** request bodies, OTP codes or full user records.
+- **`toPublicUser`** returns only `id` (the public `uid`), `name`, `city`, `phone`, `phoneVerified`, `email` and `avatarUrl`. It's used only for the user themself. Internal fields (`_id`, `googleSub`) are never loaded for responses.
+- **Planned:** public seller profiles will use a separate, smaller shape with no phone or email.
 
-## Common vulnerabilities: checklist for every change
+## Checklist for every change
 
-| Risk                    | Rule                                                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Injection               | Validate with strict Zod schemas. Never pass raw input to queries                                                                                 |
-| Broken access control   | Check ownership in the service for every read and write of user-owned data                                                                        |
-| Mass assignment         | Copy only allowed fields from `req.validated` into updates. Never spread the whole body into a document                                           |
-| Sensitive data exposure | Use projections. Never return sessions, tokens, phone numbers of other users or internal IDs that aren't needed                                   |
-| Missing rate limits     | Brute-forceable endpoints (login, OTP) get stricter limits                                                                                        |
-| SSRF                    | Never fetch a URL supplied by the client                                                                                                          |
-| Dependency risk         | Run `npm audit --omit=dev` before releases. Keep the lockfile committed. Install scripts are denied by default (`allowScripts` in `package.json`) |
+| Risk                  | Rule                                                                              |
+| --------------------- | --------------------------------------------------------------------------------- |
+| Injection             | Strict Zod schemas. Never pass raw input into queries                             |
+| Broken access control | Act on `req.user`. Check ownership in services                                    |
+| Mass assignment       | Copy only validated fields into updates                                           |
+| Data exposure         | Use projections, and never return other users' phone or email                     |
+| Brute force           | Rate-limit anything guessable                                                     |
+| CSRF                  | Every state-changing route goes through `/api/v1` (Origin check)                  |
+| Open redirect         | Redirect only to validated same-site paths                                        |
+| Dependencies          | Run `npm audit --omit=dev` before releases. Install scripts are denied by default |

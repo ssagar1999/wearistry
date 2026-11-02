@@ -44,6 +44,8 @@ Write code that a new teammate can read once and change confidently. Clarity bea
 - **Never use an empty `catch {}`.** If you catch, do one of three things: handle the error meaningfully, rethrow it, or log it with context and say why it's safe to continue.
 - **Never send internal details to clients.** Messages in `ApiError` are written for users.
 - **Validate at the edge** with Zod. Inside services, trust the validated types.
+- **Read input in controllers with `validated(req, "body", schema)`.** It returns the exact parsed type with no casts.
+- **Wrap operators you write in database filters** with `mongoose.trusted({ $gt: … })`. `sanitizeFilter` neutralises unmarked operators (see `DATABASE.md`). Never wrap client values.
 
 ## Readability
 

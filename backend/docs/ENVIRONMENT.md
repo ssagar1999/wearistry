@@ -25,7 +25,21 @@ cp .env.example .env    # then edit .env
 | `RATE_LIMIT_WINDOW_MS` | No       | `60000`                 | Rate-limit window in milliseconds                                                                                                                                                                   |
 | `RATE_LIMIT_MAX`       | No       | `120`                   | Requests allowed per IP per window, across all `/api/v1` routes                                                                                                                                     |
 
-Variables for Google login, phone OTP, sessions and photo storage get added here as those features are built (milestones 2–3).
+### Login and sessions
+
+| Variable                                   | Required             | Default                 | What it does                                                                                                                                                                                               |
+| ------------------------------------------ | -------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_SECRET`                              | **Yes**              | none                    | At least 32 random characters (`openssl rand -base64 32`). Keys the HMAC that hashes OTP codes and OAuth `state`. Rotating it cancels pending codes and in-progress Google sign-ins, not existing sessions |
+| `APP_URL`                                  | No                   | `http://localhost:3000` | Public URL of the web app. The Google callback (`APP_URL/api/v1/auth/google/callback`) and post-login redirects are built from it, and it's always allowed by the Origin (CSRF) check                      |
+| `SESSION_TTL_DAYS`                         | No                   | `30`                    | How long a login lasts (1–90 days)                                                                                                                                                                         |
+| `AUTH_RATE_LIMIT_MAX`                      | No                   | `30`                    | Per-IP requests to login endpoints per 15 minutes                                                                                                                                                          |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | No (both or neither) | unset                   | Google sign-in. If unset, `/auth/google/start` returns 503. Setup: `GOOGLE_OAUTH_SETUP.md`                                                                                                                 |
+| `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID`      | No (both or neither) | unset                   | SMS for phone login codes. If unset and `OTP_DEV_CODES` is off, sending a code returns 503. Setup: `SMS_SETUP.md`                                                                                          |
+| `OTP_DEV_CODES`                            | No                   | `false`                 | `true` returns login codes in the API response instead of sending SMS. **Refused in production.** Use it in local development only                                                                         |
+
+Photo storage variables get added when uploads move to the API (milestone 3).
+
+The web app (`../frontend`) has its own settings: `API_INTERNAL_URL` (where it proxies `/api/v1`, default `http://localhost:4000`) and `NEXT_PUBLIC_GOOGLE_LOGIN=true` to show the Google button.
 
 ## Development vs production
 

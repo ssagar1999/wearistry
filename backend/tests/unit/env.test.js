@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { EnvValidationError, parseEnv } from "../../src/config/env.js";
 
-const minimal = { MONGODB_URI: "mongodb://localhost:27017/wearistry" };
+const minimal = {
+  MONGODB_URI: "mongodb://localhost:27017/wearistry",
+  AUTH_SECRET: "a-test-secret-that-is-at-least-32-chars",
+};
 
 describe("parseEnv", () => {
   it("applies safe defaults when only the required variable is set", () => {
@@ -44,6 +47,30 @@ describe("parseEnv", () => {
       expect(message).toContain("CORS_ORIGINS");
       expect(message).not.toContain("secret-password");
     }
+  });
+
+  it("requires a long AUTH_SECRET", () => {
+    expect(() => parseEnv({ ...minimal, AUTH_SECRET: "short" })).toThrow(/AUTH_SECRET/);
+  });
+
+  it("parses boolean flags strictly", () => {
+    expect(parseEnv({ ...minimal, OTP_DEV_CODES: "true" }).OTP_DEV_CODES).toBe(true);
+    expect(parseEnv(minimal).OTP_DEV_CODES).toBe(false);
+    expect(() => parseEnv({ ...minimal, OTP_DEV_CODES: "yes" })).toThrow(EnvValidationError);
+  });
+
+  it("refuses OTP_DEV_CODES in production", () => {
+    expect(() => parseEnv({ ...minimal, NODE_ENV: "production", OTP_DEV_CODES: "true" })).toThrow(
+      /OTP_DEV_CODES/,
+    );
+  });
+
+  it("requires provider keys in pairs and treats empty values as unset", () => {
+    expect(() => parseEnv({ ...minimal, GOOGLE_CLIENT_ID: "id" })).toThrow(/GOOGLE_CLIENT_SECRET/);
+    expect(() => parseEnv({ ...minimal, MSG91_AUTH_KEY: "key" })).toThrow(/MSG91_TEMPLATE_ID/);
+    expect(
+      parseEnv({ ...minimal, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "" }).GOOGLE_CLIENT_ID,
+    ).toBeUndefined();
   });
 
   it("rejects an unknown NODE_ENV", () => {

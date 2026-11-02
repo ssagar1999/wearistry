@@ -41,7 +41,14 @@ export async function connectDatabase(uri, logger) {
  */
 async function ensureIndexes(logger) {
   const models = Object.values(mongoose.models);
-  await Promise.all(models.map((model) => model.createIndexes()));
+  try {
+    await Promise.all(models.map((model) => model.createIndexes()));
+  } catch (error) {
+    // Usually an existing index with different options; changing an index is a migration, not a startup task.
+    throw new Error("Could not create indexes. If a schema index changed, run `npm run migrate` first.", {
+      cause: error,
+    });
+  }
   if (models.length) logger.info({ models: models.map((model) => model.modelName) }, "Indexes ensured");
 }
 

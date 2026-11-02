@@ -6,14 +6,20 @@ Built with Next.js 15, TypeScript, Tailwind CSS, MongoDB (Mongoose), sharp for p
 
 ## Run it
 
-**Quick dev mode** (no database needed; data lives in memory, and login codes show on screen):
+**Dev mode.** Login and accounts come from the backend API, so start it first (see [backend/README.md](../backend/README.md)):
+
+```bash
+cd ../backend && npm run dev     # API on http://localhost:4000
+```
+
+Then, in another terminal:
 
 ```bash
 npm install
-npm run dev
+npm run dev                      # web app on http://localhost:3000
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. Listings and threads still live in this app until they move to the API; without `MONGODB_URI` they're kept in memory.
 
 **With Docker** (the app plus a real MongoDB), from the repo root:
 
@@ -30,8 +36,8 @@ Copy `.env.example` to `.env.local` and fill in what you need. Everything is opt
 | Feature | Settings | Guide |
 | --- | --- | --- |
 | Database | `MONGODB_URI` | MongoDB Atlas connection string |
-| Login cookies | `AUTH_SECRET` | Required in production |
-| SMS login codes | `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID` | [docs/SMS_SETUP.md](docs/SMS_SETUP.md) |
+| Backend API | `API_INTERNAL_URL` (default `http://localhost:4000`) | Login and accounts are handled by the API; see [backend/README.md](../backend/README.md) |
+| Google button | `NEXT_PUBLIC_GOOGLE_LOGIN=true` | Turn on once the backend has Google keys |
 | Photo storage | `AWS_*`, `S3_BUCKET`, `S3_PUBLIC_URL` | [docs/S3_SETUP.md](docs/S3_SETUP.md) |
 
 ## Scripts
@@ -41,4 +47,3 @@ Copy `.env.example` to `.env.local` and fill in what you need. Everything is opt
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run lint` | ESLint |
-| `npm run sms:test -- 98765XXXXX` | Sends one test OTP SMS through MSG91 |

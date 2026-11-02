@@ -14,6 +14,8 @@ export default [
       "prefer-const": "error",
     },
   },
+  // Command-line scripts report to the terminal.
+  { files: ["scripts/**"], rules: { "no-console": "off" } },
   // Turns off style rules that would fight Prettier.
   prettier,
 ];

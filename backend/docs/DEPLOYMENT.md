@@ -1,6 +1,6 @@
 # Deployment
 
-> **Status (milestone 1):** the API can run in production mode (`npm start`) with health checks, JSON logs and graceful shutdown. A backend Dockerfile and a compose service are planned for milestone 4. The repo's current `compose.yaml` runs only the frontend and MongoDB.
+> **Status (milestone 2):** the API runs in production mode (`npm start`) with health checks, JSON logs, graceful shutdown and versioned migrations. A backend Dockerfile and a compose service are planned for milestone 4. The repo's current `compose.yaml` runs only the frontend and MongoDB.
 
 ## Build
 
@@ -21,7 +21,8 @@ npm audit --omit=dev   # production dependencies only
 ## Production environment
 
 - **Node.js 22.12 or later** (24 LTS recommended), matching `engines` in `package.json`.
-- **Required variables:** set `NODE_ENV=production`, `MONGODB_URI`, `CORS_ORIGINS` (your HTTPS domains) and `TRUST_PROXY_HOPS` to match your proxies. See `ENVIRONMENT.md`.
+- **Required variables:** set `NODE_ENV=production`, `MONGODB_URI`, `AUTH_SECRET` (a new one, not the development value), `APP_URL` (your HTTPS web address), `CORS_ORIGINS` and `TRUST_PROXY_HOPS` to match your proxies, plus the MSG91 and Google keys. `OTP_DEV_CODES` must be off, and the server refuses to start otherwise. See `ENVIRONMENT.md`.
+- **Google Cloud:** add `https://<your-domain>/api/v1/auth/google/callback` as an authorised redirect URI (see `GOOGLE_OAUTH_SETUP.md`).
 - **No `.env` file in production.** `npm start` doesn't read one. Use the platform's secret settings.
 - **HTTPS is terminated at the load balancer or proxy.** The API itself speaks HTTP on `PORT`.
 - **Region:** use Mumbai (`ap-south-1`) or the closest region to the database, since most users are in India.
@@ -55,6 +56,7 @@ Health checks aren't written to the request log, so they don't drown out real tr
 
 ## Deploying safely, and rolling back
 
+0. **Run pending database migrations first,** from one machine: `npm run migrate:status`, then `npm run migrate` (see `MIGRATIONS.md`). The app refuses to start if a schema index changed and its migration hasn't run.
 1. **Deploy only commits where `npm run check` passed.** Tag each release, for example `api-v0.1.0`.
 2. **Use rolling or blue-green deploys.** New instances must pass readiness before receiving traffic, and old ones drain through graceful shutdown.
 3. **Watch error rate, latency and logs** for a few minutes after each deploy.

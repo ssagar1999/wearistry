@@ -16,9 +16,16 @@ export default async function Account() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-beige font-serif text-2xl">{user.name[0]}</div>
         <div>
           <h1 className="font-serif text-[28px] leading-tight">{user.name}</h1>
-          <p className="text-sm text-umber">{user.city ? `${user.city} · ` : ""}{maskPhone(user.phone)}</p>
+          <p className="text-sm text-umber">
+            {[user.city, user.phone ? maskPhone(user.phone) : user.email].filter(Boolean).join(" · ")}
+          </p>
         </div>
       </div>
+      {!user.phone && (
+        <Link href="/login?verify=phone&next=/account" className="block rounded-xl bg-beige p-4 text-sm">
+          <b>Add your phone number</b> to buy and sell. It’s only shared with people you trade with.
+        </Link>
+      )}
       <div className="grid gap-2">
         <Link href="/sell" className="rounded-xl border border-line bg-white p-4 font-medium">List a piece</Link>
         <Link href="/saved" className="rounded-xl border border-line bg-white p-4 font-medium">Saved items</Link>

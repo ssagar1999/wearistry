@@ -1,6 +1,6 @@
 # Setting up login SMS (MSG91)
 
-Wearistry logs people in with a 6-digit code sent by SMS. Until the two MSG91 keys are set, dev mode shows the code on screen instead of sending it. In production the site refuses to send codes without them.
+Wearistry logs people in with a 6-digit code sent by SMS. The API sends it (`modules/auth/sms.client.js`). In development, `OTP_DEV_CODES=true` shows the code on screen instead. In production, sending a code returns an error until the two MSG91 keys are set.
 
 Sending SMS in India has two parts: **DLT registration** (a TRAI rule for every business that sends SMS) and an **MSG91 account** that does the sending. DLT approval usually takes a few working days, so start it first.
 
@@ -9,8 +9,8 @@ Sending SMS in India has two parts: **DLT registration** (a TRAI rule for every 
 Register on one telecom operator's DLT portal, such as Jio, Airtel, Vodafone Idea or BSNL. It covers all networks. You need a business document like GST, PAN, or an incorporation or shop certificate. Registration may cost a fee, which depends on the operator.
 
 1. **Register your business as a Principal Entity.** You'll get an **Entity ID** (PE ID).
-2. **Register a header (Sender ID).** It's 6 letters, for example `WRSTRY`, and the category is *Transactional* or *Service Implicit*.
-3. **Register a content template** in the *Service Implicit* (OTP) category. Put `{#var#}` where the code goes, for example:
+2. **Register a header (Sender ID).** It's 6 letters, for example `WRSTRY`, and the category is _Transactional_ or _Service Implicit_.
+3. **Register a content template** in the _Service Implicit_ (OTP) category. Put `{#var#}` where the code goes, for example:
 
    ```
    {#var#} is your Wearistry login code. It expires in 5 minutes. Do not share it with anyone.
@@ -32,15 +32,15 @@ Register on one telecom operator's DLT portal, such as Jio, Airtel, Vodafone Ide
 
 ## 3. Add the keys
 
-Create `.env.local` in the project folder (next to `package.json`):
+In `backend/.env` (type the values yourself; never paste them into chats):
 
 ```
 MSG91_AUTH_KEY=your-auth-key
 MSG91_TEMPLATE_ID=your-msg91-otp-template-id
-AUTH_SECRET=a-long-random-string
+OTP_DEV_CODES=false
 ```
 
-Generate `AUTH_SECRET` with `openssl rand -base64 32`. Never commit `.env.local`.
+Never commit `.env`.
 
 ## 4. Test it
 
@@ -50,16 +50,16 @@ Send one SMS to your own phone:
 npm run sms:test -- 98765XXXXX
 ```
 
-If it says `Sent`, restart `npm run dev` and log in on the site. You should get a real SMS, and the on-screen dev code will be gone.
+Run that inside `backend/`. If it says `Sent`, restart the API (`npm run dev`) and log in on the site. You should get a real SMS, and the on-screen dev code will be gone.
 
 ### If it fails
 
-| MSG91 message | What to check |
-| --- | --- |
-| `The provided flow ID or template ID is invalid.` | `MSG91_TEMPLATE_ID` is the template ID from MSG91's OTP section, not the DLT Template ID. |
-| `401` / authkey errors | `MSG91_AUTH_KEY` is copied in full. If IP whitelisting is on, your current IP is on the list. |
-| Says `Sent` but no SMS arrives | The DLT template isn't approved yet, or the MSG91 wording doesn't exactly match the DLT wording. |
-| Insufficient balance | Add SMS credit in MSG91. |
+| MSG91 message                                     | What to check                                                                                    |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `The provided flow ID or template ID is invalid.` | `MSG91_TEMPLATE_ID` is the template ID from MSG91's OTP section, not the DLT Template ID.        |
+| `401` / authkey errors                            | `MSG91_AUTH_KEY` is copied in full. If IP whitelisting is on, your current IP is on the list.    |
+| Says `Sent` but no SMS arrives                    | The DLT template isn't approved yet, or the MSG91 wording doesn't exactly match the DLT wording. |
+| Insufficient balance                              | Add SMS credit in MSG91.                                                                         |
 
 ## Hosting
 

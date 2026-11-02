@@ -1,14 +1,19 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 import swaggerUi from "swagger-ui-express";
 import { buildOpenApiDocument } from "./docs/openapi.js";
+import { loadSession } from "./middleware/auth.middleware.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { notFound } from "./middleware/not-found.middleware.js";
 import { createRateLimiter } from "./middleware/rate-limit.middleware.js";
 import { requestId } from "./middleware/request-id.middleware.js";
+import { requireTrustedOrigin } from "./middleware/trusted-origin.middleware.js";
+import { createAuthRouter } from "./modules/auth/auth.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { usersRouter } from "./modules/users/user.routes.js";
 
 /** @typedef {import("./config/env.js").Env} Env */
 
@@ -18,9 +23,10 @@ const JSON_BODY_LIMIT = "100kb";
  * Builds the Express app without starting a server, so tests can exercise it with Supertest.
  * Middleware order matters: tracing first, then security, then parsing, routes, and errors last.
  *
- * @param {{ env: Readonly<Env>, logger: import("pino").Logger }} deps
+ * @param {{ env: Readonly<Env>, logger: import("pino").Logger, googleClient?: import("./modules/auth/google.client.js").GoogleClient }} deps
+ *   `googleClient` lets tests replace Google with a fake.
  */
-export function createApp({ env, logger }) {
+export function createApp({ env, logger, googleClient }) {
   const app = express();
 
   app.disable("x-powered-by");
@@ -56,10 +62,15 @@ export function createApp({ env, logger }) {
     }),
   );
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
+  app.use(cookieParser());
 
   const api = express.Router();
   api.use(createRateLimiter({ windowMs: env.RATE_LIMIT_WINDOW_MS, limit: env.RATE_LIMIT_MAX }));
   api.use("/health", healthRouter);
+  api.use(requireTrustedOrigin([env.APP_URL, ...env.CORS_ORIGINS]));
+  api.use(loadSession);
+  api.use("/auth", createAuthRouter({ env, logger, googleClient }));
+  api.use("/users", usersRouter);
   app.use("/api/v1", api);
 
   if (env.NODE_ENV !== "production") {
