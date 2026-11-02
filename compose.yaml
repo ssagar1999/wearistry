@@ -1,9 +1,10 @@
 # Runs Wearistry and a MongoDB database together with one command: docker compose up --build
+# Run it from the repo root (the folder that contains frontend/).
 # Explained step by step in teachdockerfile.md.
 
 services:
   web:
-    build: .
+    build: ./frontend
     ports:
       - "3000:3000" # your computer's port : the container's port
     environment:

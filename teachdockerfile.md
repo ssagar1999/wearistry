@@ -70,7 +70,7 @@ Both should print a version number. If you get "command not found", Docker Deskt
 cd ~/Desktop/app1/wearistry
 ```
 
-Every Docker command below is run from this folder, because Docker looks for `Dockerfile` and `compose.yaml` here.
+Every Docker command below is run from this folder (the repo root), because Docker looks for `compose.yaml` here. The app's `Dockerfile` lives in `frontend/`.
 
 ### Step 3: Build and start everything
 
@@ -95,7 +95,7 @@ Press **Ctrl + C** in that Terminal window. The containers stop, and your data s
 
 ## Lesson 4 — Our files explained line by line
 
-### `Dockerfile`: the recipe
+### `frontend/Dockerfile`: the recipe
 
 We build in **3 stages**. Each stage starts from a fresh base, and the final image keeps only what's needed to run. That makes the final image much smaller, and it has no build tools inside.
 
@@ -150,7 +150,7 @@ CMD ["node", "server.js"]
 ```
 **EXPOSE** documents that the app uses port 3000. **CMD** is the command that runs when the container starts.
 
-### `.dockerignore`: what NOT to pack
+### `frontend/.dockerignore`: what NOT to pack
 Like `.gitignore`, but for Docker. We skip:
 - `node_modules` and `.next`: rebuilt inside the image anyway, and copying them would be slow.
 - `.env*`: **secrets must never go inside an image.** Anyone with the image could read them.
@@ -161,9 +161,9 @@ Like `.gitignore`, but for Docker. We skip:
 ```yaml
 services:
   web:
-    build: .
+    build: ./frontend
 ```
-The **web** service is built from the `Dockerfile` in this folder (`.`).
+The **web** service is built from the `Dockerfile` in the `frontend/` folder. That folder is the **build context**: the only files Docker can see while building.
 
 ```yaml
     ports:
@@ -274,5 +274,6 @@ New lessons get added here, newest at the bottom.
 | Date | Lesson | What was added to the project |
 | --- | --- | --- |
 | 2026-11-02 | Lessons 1–6: what Docker is, the 6 words, install, our files line by line, everyday commands, troubleshooting | `Dockerfile`, `.dockerignore`, `compose.yaml` (app + MongoDB), `DEV_MODE` local mode |
+| 2026-11-02 | Build context | The app moved to `frontend/`, so compose now builds from `./frontend` |
 
 **Coming next:** deploying the container to a real server (AWS in the Mumbai region), keeping secrets out of the image, and adding Redis for the login codes.

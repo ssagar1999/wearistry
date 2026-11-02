@@ -1,5 +1,5 @@
 # Wearistry image. Built in 3 stages so the final image only has what's needed to run.
-# Explained step by step in teachdockerfile.md.
+# Explained step by step in ../teachdockerfile.md.
 
 # 1. deps: install npm packages (cached until package.json or package-lock.json change)
 FROM node:24-bookworm-slim AS deps
