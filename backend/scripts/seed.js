@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { connectDatabase } from "../src/config/database.js";
 import { parseEnv } from "../src/config/env.js";
 import { createLogger } from "../src/config/logger.js";
+import { stateOfCity } from "../src/modules/products/product.constants.js";
 import { Product } from "../src/modules/products/product.model.js";
 import { ThreadReply } from "../src/modules/threads/thread-reply.model.js";
 import { Thread } from "../src/modules/threads/thread.model.js";
@@ -22,10 +23,12 @@ const now = Date.now();
 
 try {
   if ((await Product.estimatedDocumentCount()) === 0) {
-    /** @type {Record<string, unknown>[]} */
+    /** @type {({ city: string } & Record<string, unknown>)[]} */
     const products = JSON.parse(await readFile(new URL("./seed-products.json", import.meta.url), "utf8"));
     // Stagger creation times so "newest first" has a stable, realistic order.
-    await Product.insertMany(products.map((p, i) => ({ ...p, createdAt: new Date(now - i * HOUR) })));
+    await Product.insertMany(
+      products.map((p, i) => ({ ...p, state: stateOfCity(p.city), createdAt: new Date(now - i * HOUR) })),
+    );
     console.log(`Seeded ${products.length} listings.`);
   } else console.log("products already has data; skipped.");
 

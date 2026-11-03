@@ -25,6 +25,7 @@ describe("migrations", () => {
       "002-threads-split-replies-likes",
       "003-products-media-urls",
       "004-contract-legacy-thread-arrays-and-indexes",
+      "005-products-state-backfill",
     ]);
   });
 
@@ -185,6 +186,26 @@ describe("migrations", () => {
       const productIndexes = (await db.collection("products").indexes()).map((i) => i.name);
       expect(productIndexes).not.toContain("city_1");
       expect(productIndexes).toContain("slug_1"); // needed indexes stay
+    });
+
+    it("005 fills in the state from the city, keeps states already set, and reruns safely", async () => {
+      const products = db.collection("products");
+      await products.deleteMany({});
+      await products.insertMany([
+        { slug: "a", city: "Pune" },
+        { slug: "b", city: "Jaipur", state: "" },
+        { slug: "c", city: "Kolkata", state: "West Bengal" },
+        { slug: "d", city: "Elsewhere" },
+      ]);
+      const five = (await loadMigrations()).find((m) => m.id === "005-products-state-backfill");
+      await five?.up(db);
+      await five?.up(db); // rerun
+
+      const state = async (/** @type {string} */ slug) => (await products.findOne({ slug }))?.state;
+      expect(await state("a")).toBe("Maharashtra");
+      expect(await state("b")).toBe("Rajasthan");
+      expect(await state("c")).toBe("West Bengal");
+      expect(await state("d")).toBeUndefined(); // unknown cities are left alone
     });
   });
 });

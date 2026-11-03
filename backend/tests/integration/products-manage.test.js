@@ -91,6 +91,13 @@ describe("filtering by seller", () => {
 });
 
 describe("PATCH /api/v1/products/:id", () => {
+  it("updates the state when the city changes", async () => {
+    const { user, cookie } = await createUserWithSession();
+    await Product.create(listing("moving", { sellerId: user.uid, city: "Pune", state: "Maharashtra" }));
+    const res = await call("patch", "/api/v1/products/moving", cookie).send({ city: "Jaipur" }).expect(200);
+    expect(res.body.data).toMatchObject({ city: "Jaipur", state: "Rajasthan" });
+  });
+
   it("lets the owner change fields and mark a piece sold, which hides it from browse", async () => {
     const { user, cookie } = await createUserWithSession();
     await Product.create(listing("my-item", { sellerId: user.uid }));

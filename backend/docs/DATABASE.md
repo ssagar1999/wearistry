@@ -83,19 +83,20 @@ Every index serves a specific query. **No index without a query, and no frequent
 
 ### `products`
 
-- **Listing details:** `slug` (public ID), `title`, `category`, `size`, `condition`, `price` and `mrp` (whole rupees), `story`, `city`, `state`, `exchange`, `status` (`active`, `sold` or `swapped`), timestamps.
+- **Listing details:** `slug` (public ID), `title`, `category`, `size`, `condition`, `price` and `mrp` (whole rupees), `story`, `city`, `state` (set by the server from the city, never taken from the client; list in `product.constants.js`), `exchange`, `status` (`active`, `sold` or `swapped`), timestamps.
 - **Photos:** `image` (the cover) and `images` (1–8).
 - **Seller:** `seller` (a copy of the name), `sellerSlug` (curated sample sellers) and `sellerId`. `sellerId` is missing on listings created before ownership existed.
 
-| Index (ESR order)                                                          | Serves                                                                      |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `{ slug: 1 }` unique                                                       | Product page, ID lists (saved items), thread cards                          |
-| `{ status: 1, createdAt: -1, _id: -1 }`                                    | Browse: newest active listings, cursor-paginated                            |
-| `{ status: 1, city: 1, createdAt: -1, _id: -1 }`                           | Browse by city                                                              |
-| `{ status: 1, category: 1, createdAt: -1, _id: -1 }`                       | Browse by category                                                          |
-| `{ sellerSlug: 1, createdAt: -1, _id: -1 }` partial (`sellerSlug > ""`)    | Curated seller pages                                                        |
-| `{ sellerId: 1, createdAt: -1, _id: -1 }` partial (`sellerId` is a string) | "My listings" (`GET /products/mine`) and public seller pages (`?sellerId=`) |
-| `{ title: "text", story: "text" }`                                         | Keyword search (`?q=`)                                                      |
+| Index (ESR order)                                                          | Serves                                                                       |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `{ slug: 1 }` unique                                                       | Product page, ID lists (saved items), thread cards                           |
+| `{ status: 1, createdAt: -1, _id: -1 }`                                    | Browse: newest active listings, cursor-paginated                             |
+| `{ status: 1, state: 1, createdAt: -1, _id: -1 }`                          | Browse by state (the main location filter; most buyers want their own state) |
+| `{ status: 1, city: 1, createdAt: -1, _id: -1 }`                           | Browse by city                                                               |
+| `{ status: 1, category: 1, createdAt: -1, _id: -1 }`                       | Browse by category                                                           |
+| `{ sellerSlug: 1, createdAt: -1, _id: -1 }` partial (`sellerSlug > ""`)    | Curated seller pages                                                         |
+| `{ sellerId: 1, createdAt: -1, _id: -1 }` partial (`sellerId` is a string) | "My listings" (`GET /products/mine`) and public seller pages (`?sellerId=`)  |
+| `{ title: "text", story: "text" }`                                         | Keyword search (`?q=`)                                                       |
 
 Filters on `condition` and `exchange`, and `city` combined with `category`, aren't separately indexed: they're applied while walking the closest index above. That's fine because results stop at the page size. Add a dedicated compound index only if `explain()` on real data shows many documents examined per result.
 

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { categories, cities, conditions, sizes, type Product } from "@/lib/data";
+import { categories, conditions, locations, sizes, states, type Product } from "@/lib/data";
 
 export default function EditListingForm({ product }: { product: Product }) {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function EditListingForm({ product }: { product: Product }) {
         <label>Category<select name="category" defaultValue={product.category} className={f}>{categories.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label>Size<select name="size" defaultValue={product.size} className={f}>{sizes.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label>Condition<select name="condition" defaultValue={product.condition} className={f}>{conditions.map((c) => <option key={c}>{c}</option>)}</select></label>
-        <label>City<select name="city" defaultValue={product.city} className={f}>{cities.map((c) => <option key={c}>{c}</option>)}</select></label>
+        <label>City<select name="city" defaultValue={product.city} className={f}>{states.map((x) => <optgroup key={x} label={x}>{locations[x].map((c) => <option key={c}>{c}</option>)}</optgroup>)}</select></label>
         <label>Price (₹)<input required type="number" min={1} name="price" defaultValue={product.price} className={f} /></label>
         <label>Original MRP (₹)<input required type="number" min={1} name="mrp" defaultValue={product.mrp} className={f} /></label>
       </div>

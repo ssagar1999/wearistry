@@ -2,6 +2,8 @@
 
 > **Status (milestone 4):** the API ships as a Docker image (`backend/Dockerfile`). `compose.yaml` at the repo root runs the full stack locally: MongoDB, a one-off migration step, the API and the web app. The steps below apply with or without Docker.
 
+**To put it online with Render, see [RENDER_DEPLOY.md](RENDER_DEPLOY.md)** (uses `render.yaml` in the repo root).
+
 ## Docker image
 
 ```bash

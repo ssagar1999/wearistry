@@ -61,3 +61,7 @@ Full list: `ENVIRONMENT.md`. Release steps: `DEPLOYMENT.md`.
 | **Chat between buyer and seller**                                                   | Not designed yet             | Whether it should be real-time, and whether swap contact-sharing already covers the need                                                           |
 | **A deployable production setup** (a `compose.prod.yaml` with HTTPS, and AWS steps) | Needs your server and domain | Where to host (a single AWS server in Mumbai is the simplest) and your domain name                                                                 |
 | **Photo editing on a listing**                                                      | Not built                    | Say if you want it                                                                                                                                 |
+
+## 6. Deploy on Render
+
+Once steps 1, 2 and 4 are done, follow [RENDER_DEPLOY.md](RENDER_DEPLOY.md). It uses `render.yaml` in the repo root.

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import { cities, type Page, type Product, type Thread } from "@/lib/data";
+import { stateOfCity, states, type Page, type Product, type Thread } from "@/lib/data";
 import { apiGet } from "@/lib/server-api";
+import { currentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +18,10 @@ const steps = [
 ];
 
 export default async function Home() {
+  // Logged-in users see their own state first: nobody wants to wait for a parcel from another corner of India.
+  const homeState = stateOfCity((await currentUser())?.city ?? "");
   const [{ data: fresh }, { data: threads }] = await Promise.all([
-    apiGet<Page<Product>>("/products?limit=8"),
+    apiGet<Page<Product>>(`/products?limit=8${homeState ? `&state=${encodeURIComponent(homeState)}` : ""}`),
     apiGet<Page<Thread>>("/threads?limit=2"),
   ]);
   return (
@@ -39,15 +42,16 @@ export default async function Home() {
       </section>
 
       <section className="mt-6 flex gap-2 overflow-x-auto pb-1">
-        {cities.map((c) => (
-          <Link key={c} href={`/explore?city=${c}`} className="shrink-0 rounded-full border border-line px-4 py-2 text-sm">{c}</Link>
+        {(homeState ? [homeState, ...states.filter((x) => x !== homeState)] : states).map((x) => (
+          <Link key={x} href={`/explore?state=${encodeURIComponent(x)}`}
+            className={`shrink-0 rounded-full px-4 py-2 text-sm ${x === homeState ? "bg-ink text-canvas" : "border border-line"}`}>{x}</Link>
         ))}
       </section>
 
       <section className="py-8">
         <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="font-serif text-[26px] md:text-4xl">Fresh drops</h2>
-          <Link href="/explore" className="text-sm font-semibold underline">See all</Link>
+          <h2 className="font-serif text-[26px] md:text-4xl">Fresh drops{homeState ? ` in ${homeState}` : ""}</h2>
+          <Link href={homeState ? "/explore" : "/explore?all=1"} className="text-sm font-semibold underline">See all</Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {fresh.map((p) => <ProductCard key={p.id} p={p} />)}

@@ -67,7 +67,36 @@ export type Reply = { id: string; author: string; text: string; at: number };
 /** Paginated list responses: pass `nextCursor` back as `cursor` for the next page. */
 export type Page<T> = { data: T[]; meta: { nextCursor: string | null; limit: number } };
 
-export const cities = ["Mumbai", "Delhi", "Bengaluru", "Kolkata", "Jaipur", "Pune", "Hyderabad", "Chennai", "Ahmedabad"];
+/** State → cities. Same list as the API (backend/src/modules/products/product.constants.js). */
+export const locations: Record<string, string[]> = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Tirupati"],
+  Assam: ["Guwahati"],
+  Bihar: ["Patna"],
+  Chandigarh: ["Chandigarh"],
+  Chhattisgarh: ["Raipur"],
+  Delhi: ["Delhi", "New Delhi"],
+  Goa: ["Panaji"],
+  Gujarat: ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
+  Haryana: ["Gurugram", "Faridabad"],
+  "Himachal Pradesh": ["Shimla"],
+  Jharkhand: ["Ranchi"],
+  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru"],
+  Kerala: ["Kochi", "Thiruvananthapuram", "Kozhikode"],
+  "Madhya Pradesh": ["Indore", "Bhopal"],
+  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik", "Thane"],
+  Odisha: ["Bhubaneswar"],
+  Punjab: ["Ludhiana", "Amritsar"],
+  Rajasthan: ["Jaipur", "Jodhpur", "Udaipur"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
+  Telangana: ["Hyderabad"],
+  "Uttar Pradesh": ["Lucknow", "Noida", "Kanpur", "Varanasi"],
+  Uttarakhand: ["Dehradun"],
+  "West Bengal": ["Kolkata"],
+};
+export const states = Object.keys(locations);
+export const cities = Object.values(locations).flat();
+export const stateOfCity = (city: string) => states.find((s) => locations[s].includes(city)) ?? "";
+
 export const categories = ["Jackets", "Shirts", "Sarees", "Dupattas", "Denim", "Tops", "Skirts", "Accessories"];
 export const sizes = ["XS", "S", "M", "L", "XL", "Free size"];
 export const conditions = ["Like new", "Excellent", "Good"];

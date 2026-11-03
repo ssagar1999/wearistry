@@ -1,0 +1,66 @@
+# Render Blueprint: creates both services from the Dockerfiles in this repo.
+# Step-by-step guide: backend/docs/RENDER_DEPLOY.md
+# Names matter: the two URLs below assume the services get https://wearistry-api.onrender.com and
+# https://wearistry.onrender.com. If Render says a name is taken, rename the service and update
+# APP_URL, CORS_ORIGINS and API_INTERNAL_URL to match.
+services:
+  - type: web
+    name: wearistry-api
+    runtime: docker
+    region: singapore # closest Render region to India (there is no Mumbai region)
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/v1/health/ready
+    # Runs once per deploy, before the new version starts. Migrations are idempotent (docs/MIGRATIONS.md).
+    preDeployCommand: node scripts/migrate.js up
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_PRETTY
+        value: "false"
+      - key: APP_URL
+        value: https://wearistry.onrender.com
+      - key: CORS_ORIGINS
+        value: https://wearistry.onrender.com
+      # Hops between a visitor and the API: Render's load balancer, plus the web app's server (it forwards
+      # /api/v1 requests). If rate limits seem shared between visitors, see RENDER_DEPLOY.md.
+      - key: TRUST_PROXY_HOPS
+        value: "2"
+      - key: AUTH_SECRET
+        generateValue: true
+      # Secrets: Render asks for these when you create the Blueprint. Never put real values in this file.
+      - key: MONGODB_URI
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_PUBLIC_URL
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: MSG91_AUTH_KEY
+        sync: false
+      - key: MSG91_TEMPLATE_ID
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+  - type: web
+    name: wearistry
+    runtime: docker
+    region: singapore
+    plan: starter
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /
+    envVars:
+      # Used at build time (the /api/v1 proxy target is baked in) and at run time (server-rendered pages).
+      - key: API_INTERNAL_URL
+        value: https://wearistry-api.onrender.com
+      # Set to "true" after adding the Google keys to the API.
+      - key: NEXT_PUBLIC_GOOGLE_LOGIN
+        value: "false"

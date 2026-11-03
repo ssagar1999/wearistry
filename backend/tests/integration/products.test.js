@@ -112,6 +112,23 @@ describe("GET /api/v1/products", () => {
     expect(await ids("sellerSlug=aarti-rao")).toEqual(["listing-1"]);
   });
 
+  it("filters by state, alone or with a city, and rejects unknown states", async () => {
+    await Product.insertMany([
+      listing({ city: "Pune", state: "Maharashtra" }, 1),
+      listing({ city: "Mumbai", state: "Maharashtra" }, 2),
+      listing({ city: "Jaipur", state: "Rajasthan" }, 3),
+    ]);
+    const ids = async (/** @type {string} */ qs) =>
+      (await request(app).get(`/api/v1/products?${qs}`).expect(200)).body.data.map(
+        (/** @type {{ id: string }} */ p) => p.id,
+      );
+    expect(await ids("state=Maharashtra")).toEqual(["listing-1", "listing-2"]);
+    expect(await ids("state=Maharashtra&city=Mumbai")).toEqual(["listing-2"]);
+    expect(await ids("state=Rajasthan")).toEqual(["listing-3"]);
+    expect(await ids("state=Goa")).toEqual([]);
+    await request(app).get("/api/v1/products?state=Narnia").expect(400);
+  });
+
   it("searches titles and stories", async () => {
     await Product.insertMany([
       listing({ title: "Chanderi silk saree" }, 1),
@@ -167,6 +184,8 @@ describe("POST /api/v1/products", () => {
     });
     expect(res.body.data.id).toMatch(/^indigo-kantha-jacket-/);
     expect((await Product.findOne({ slug: res.body.data.id }).lean())?.sellerId).toBe(user.uid);
+    // The state comes from the city on the server, not from the client.
+    expect(res.body.data.state).toBe("West Bengal");
   });
 
   it("requires login, a verified phone and the web app's Origin", async () => {
@@ -192,6 +211,7 @@ describe("POST /api/v1/products", () => {
     await create(cookie, { ...validBody, images: [] }).expect(400);
     await create(cookie, { ...validBody, images: Array(9).fill(PHOTO) }).expect(400);
     await create(cookie, { ...validBody, sellerId: "someone-else" }).expect(400);
+    await create(cookie, { ...validBody, state: "Goa" }).expect(400);
   });
 
   it("only accepts photos uploaded through Wearistry", async () => {
@@ -205,13 +225,21 @@ describe("query plans (indexes are actually used)", () => {
   it("browse, city, category, seller and ID lookups use index scans, not collection scans", async () => {
     await Product.insertMany(
       Array.from({ length: 30 }, (_, i) =>
-        listing({ city: i % 2 ? "Pune" : "Delhi", sellerSlug: i < 3 ? "aarti-rao" : "" }, i),
+        listing(
+          {
+            city: i % 2 ? "Pune" : "Delhi",
+            state: i % 2 ? "Maharashtra" : "Delhi",
+            sellerSlug: i < 3 ? "aarti-rao" : "",
+          },
+          i,
+        ),
       ),
     );
     const plans = await Promise.all(
       [
         { status: "active" },
         { status: "active", city: "Pune" },
+        { status: "active", state: "Maharashtra" },
         { status: "active", category: "Jackets" },
         { status: "active", sellerSlug: "aarti-rao" },
       ].map((filter) =>

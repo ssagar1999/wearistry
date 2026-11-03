@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import mongoose from "mongoose";
 import { ApiError } from "../../utils/api-error.js";
 import { cursorPaging } from "../../utils/pagination.js";
+import { stateOfCity } from "./product.constants.js";
 import { Product } from "./product.model.js";
 
 const paging = cursorPaging("createdAt", "date");
@@ -64,7 +65,7 @@ export function toPublicProduct(doc) {
 /** @typedef {ReturnType<typeof toPublicProduct>} PublicProduct */
 
 /**
- * @param {{ limit: number, cursor?: string, city?: string, category?: string, condition?: string,
+ * @param {{ limit: number, cursor?: string, state?: string, city?: string, category?: string, condition?: string,
  *   exchange?: "true", q?: string, sellerSlug?: string, sellerId?: string, ids?: string[] }} query
  */
 export async function listProducts(query) {
@@ -85,6 +86,7 @@ export async function listProducts(query) {
 
   const filter = {
     status: "active",
+    ...(query.state && { state: query.state }),
     ...(query.city && { city: query.city }),
     ...(query.category && { category: query.category }),
     ...(query.condition && { condition: query.condition }),
@@ -155,6 +157,7 @@ export async function createProduct(seller, input, isOwnPhotoUrl) {
 
   const doc = await Product.create({
     ...input,
+    state: stateOfCity(input.city),
     slug: newSlug(input.title),
     image: input.images[0],
     seller: seller.name,
@@ -211,7 +214,7 @@ export async function updateProduct(user, slug, patch) {
   // The owner is part of the filter, so a listing can't change hands between the check above and this write.
   const doc = await Product.findOneAndUpdate(
     { slug, sellerId: user.id, status: mongoose.trusted({ $ne: "removed" }) },
-    { $set: patch },
+    { $set: typeof patch.city === "string" ? { ...patch, state: stateOfCity(patch.city) } : patch },
     { returnDocument: "after", projection: PUBLIC_PROJECTION, runValidators: true },
   ).lean();
   if (!doc) throw ApiError.notFound("This listing doesn't exist or was removed.");

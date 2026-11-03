@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { pageQuery } from "../../utils/pagination.js";
-import { CATEGORIES, CITIES, CONDITIONS, MAX_PHOTOS, SIZES } from "./product.constants.js";
+import { CATEGORIES, CITIES, CONDITIONS, MAX_PHOTOS, SIZES, STATES } from "./product.constants.js";
 
 const slug = z.string().regex(/^[a-z0-9-]{1,120}$/, "Invalid listing ID.");
 
@@ -9,6 +9,7 @@ export const productParams = z.object({ id: slug }).strict();
 export const listProductsQuery = z
   .object({
     ...pageQuery,
+    state: z.enum(STATES).optional(),
     city: z.enum(CITIES).optional(),
     category: z.enum(CATEGORIES).optional(),
     condition: z.enum(CONDITIONS).optional(),

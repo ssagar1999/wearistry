@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import PhotoPicker from "./PhotoPicker";
 import { api } from "@/lib/api";
-import { categories, cities, conditions, sizes, type Product } from "@/lib/data";
+import { categories, cities, conditions, locations, sizes, states, type Product } from "@/lib/data";
 
 export default function SellForm({ defaultCity }: { defaultCity?: string }) {
   const [state, setState] = useState<{ id?: string; error?: string; busy?: boolean }>({});
@@ -53,7 +53,7 @@ export default function SellForm({ defaultCity }: { defaultCity?: string }) {
         <label>Category<select name="category" className={f}>{categories.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label>Size<select name="size" className={f}>{sizes.map((c) => <option key={c}>{c}</option>)}</select></label>
         <label>Condition<select name="condition" className={f}>{conditions.map((c) => <option key={c}>{c}</option>)}</select></label>
-        <label>City<select name="city" defaultValue={cities.includes(defaultCity ?? "") ? defaultCity : undefined} className={f}>{cities.map((c) => <option key={c}>{c}</option>)}</select></label>
+        <label>City<select name="city" defaultValue={cities.includes(defaultCity ?? "") ? defaultCity : undefined} className={f}>{states.map((x) => <optgroup key={x} label={x}>{locations[x].map((c) => <option key={c}>{c}</option>)}</optgroup>)}</select></label>
         <label>Price (₹)<input required type="number" min={1} name="price" className={f} /></label>
         <label>Original MRP (₹)<input type="number" min={1} name="mrp" className={f} /></label>
       </div>

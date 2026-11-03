@@ -42,6 +42,7 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ slug: 1 }, { unique: true });
 // Browse, newest first, with cursor pagination. ESR: equality (status, then city/category) → sort (createdAt, _id).
 productSchema.index({ status: 1, createdAt: -1, _id: -1 });
+productSchema.index({ status: 1, state: 1, createdAt: -1, _id: -1 });
 productSchema.index({ status: 1, city: 1, createdAt: -1, _id: -1 });
 productSchema.index({ status: 1, category: 1, createdAt: -1, _id: -1 });
 // Seller pages. Partial: most listings have no sellerSlug, and old ones have no sellerId.
