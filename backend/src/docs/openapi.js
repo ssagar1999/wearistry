@@ -2,6 +2,7 @@ import { OpenAPIRegistry, OpenApiGeneratorV31 } from "@asteasolutions/zod-to-ope
 import { registerAuthDocs } from "../modules/auth/auth.docs.js";
 import { registerHealthDocs } from "../modules/health/health.docs.js";
 import { registerProductDocs } from "../modules/products/product.docs.js";
+import { registerSwapDocs } from "../modules/swaps/swap.docs.js";
 import { registerThreadDocs } from "../modules/threads/thread.docs.js";
 import { registerUploadDocs } from "../modules/uploads/upload.docs.js";
 import { registerUserDocs } from "../modules/users/user.docs.js";
@@ -18,6 +19,7 @@ export function buildOpenApiDocument() {
   registerProductDocs(registry);
   registerUploadDocs(registry);
   registerThreadDocs(registry);
+  registerSwapDocs(registry);
 
   return new OpenApiGeneratorV31(registry.definitions).generateDocument({
     openapi: "3.1.0",

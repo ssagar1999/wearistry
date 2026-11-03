@@ -33,7 +33,8 @@ const productSchema = new mongoose.Schema(
     seller: { type: String, required: true },
     sellerSlug: { type: String, default: "" }, // curated sample sellers (static profiles in the web app)
     sellerId: { type: String }, // users.uid of the seller; missing on listings created before ownership existed
-    status: { type: String, enum: ["active", "sold", "swapped"], default: "active" },
+    // "removed" is a soft delete: hidden everywhere, but references (saved items, thread cards) stay valid.
+    status: { type: String, enum: ["active", "sold", "swapped", "removed"], default: "active" },
   },
   { timestamps: true, collection: "products" },
 );

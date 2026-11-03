@@ -37,10 +37,31 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <div><dt className="text-umber">Delivery</dt><dd className="font-semibold">3–6 days, pan-India</dd></div>
         </dl>
         <div className="mt-6 flex gap-3">
-          <button className="flex-1 rounded bg-ink py-3 text-sm font-semibold text-canvas">Buy now · UPI / cards</button>
-          {p.exchange && <Link href={`/exchange?item=${p.id}`} className="flex-1 rounded border border-forest py-3 text-center text-sm font-semibold text-forest">Propose a swap</Link>}
+          {p.status !== "active" ? (
+            <p className="flex-1 rounded bg-beige py-3 text-center text-sm font-semibold text-umber">
+              {p.status === "swapped" ? "Swapped" : "Sold"}
+            </p>
+          ) : (
+            <>
+              {/* Payments aren't built yet; say so instead of showing a button that does nothing. */}
+              <button disabled className="flex-1 cursor-not-allowed rounded bg-ink/30 py-3 text-sm font-semibold text-canvas">
+                Online payment coming soon
+              </button>
+              {p.exchange && (
+                <Link href={`/exchange?item=${p.id}`} className="flex-1 rounded border border-forest py-3 text-center text-sm font-semibold text-forest">
+                  Propose a swap
+                </Link>
+              )}
+            </>
+          )}
         </div>
-        <p className="mt-6 text-sm text-umber">Sold by <Link href={p.sellerSlug ? `/seller/${p.sellerSlug}` : "#"} className="font-semibold text-ink underline">{p.seller}</Link> · {p.city}</p>
+        <p className="mt-6 text-sm text-umber">Sold by{" "}
+          {p.sellerSlug || p.sellerId ? (
+            <Link href={`/seller/${p.sellerSlug || p.sellerId}`} className="font-semibold text-ink underline">{p.seller}</Link>
+          ) : (
+            <span className="font-semibold text-ink">{p.seller}</span>
+          )}{" "}
+          · {p.city}</p>
       </div>
     </div>
   );

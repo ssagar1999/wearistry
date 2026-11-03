@@ -14,6 +14,7 @@ import { requireTrustedOrigin } from "./middleware/trusted-origin.middleware.js"
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { createProductsRouter } from "./modules/products/product.routes.js";
+import { swapsRouter } from "./modules/swaps/swap.routes.js";
 import { threadsRouter } from "./modules/threads/thread.routes.js";
 import { createMediaStorage } from "./modules/uploads/media.storage.js";
 import { createMediaRouter, createUploadsRouter } from "./modules/uploads/upload.routes.js";
@@ -82,6 +83,7 @@ export function createApp({ env, logger, googleClient }) {
   api.use("/products", createProductsRouter({ media }));
   api.use("/uploads", createUploadsRouter({ media }));
   api.use("/threads", threadsRouter);
+  api.use("/swap-requests", swapsRouter);
   app.use("/api/v1", api);
 
   if (env.NODE_ENV !== "production") {

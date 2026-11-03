@@ -2,7 +2,7 @@
 
 The REST API for Wearistry, built with **Node.js, Express 5 and MongoDB (Mongoose)** in JavaScript, with types checked by TypeScript.
 
-> **Status: milestone 3.** The API owns all data: login (phone OTP, Google), sessions, profiles, listings with search and cursor pagination, photo uploads (resized, location stripped, S3 or local), and Threads (feed, replies, likes). The web app is purely a frontend that calls this API through its `/api/v1` proxy.
+> **Status: milestone 5.** The API owns all data: login (phone OTP, Google), sessions, profiles, listings (search, cursor pagination, edit, mark sold, remove), public seller profiles, photo uploads (resized, location stripped, S3 or local), Threads (feed, replies, likes) and swap requests. The web app is purely a frontend that calls this API through its `/api/v1` proxy.
 
 ## Requirements
 
@@ -58,26 +58,31 @@ From the repo root: `docker compose up --build`, then open http://localhost:3000
 
 ## Endpoints
 
-| Method        | Path                           | Description                                                           |
-| ------------- | ------------------------------ | --------------------------------------------------------------------- |
-| GET           | `/api/v1/health/live`          | Liveness: the process is running                                      |
-| GET           | `/api/v1/health/ready`         | Readiness: the database is connected (503 if not)                     |
-| POST          | `/api/v1/auth/otp/send`        | Send a 6-digit login code to an Indian mobile number                  |
-| POST          | `/api/v1/auth/otp/verify`      | Log in with the code (or add a verified phone to the current account) |
-| GET           | `/api/v1/auth/google/start`    | Start Google sign-in (browser redirect)                               |
-| GET           | `/api/v1/auth/google/callback` | Google returns here; sets the session                                 |
-| GET           | `/api/v1/auth/me`              | The logged-in user                                                    |
-| POST          | `/api/v1/auth/logout`          | Log out                                                               |
-| PATCH         | `/api/v1/users/me`             | Update name and city                                                  |
-| GET           | `/api/v1/products`             | Browse and search listings (cursor-paginated), or fetch by `ids`      |
-| GET           | `/api/v1/products/:id`         | One listing                                                           |
-| POST          | `/api/v1/products`             | Create a listing (verified phone required)                            |
-| POST          | `/api/v1/uploads`              | Upload one photo → URL                                                |
-| GET           | `/api/v1/media/:file`          | Local photo sizes (development)                                       |
-| GET           | `/api/v1/threads`              | Community feed (cursor-paginated)                                     |
-| POST          | `/api/v1/threads`              | Post a thread                                                         |
-| POST / DELETE | `/api/v1/threads/:id/like`     | Like / unlike                                                         |
-| GET / POST    | `/api/v1/threads/:id/replies`  | List / add replies                                                    |
+| Method         | Path                           | Description                                                           |
+| -------------- | ------------------------------ | --------------------------------------------------------------------- |
+| GET            | `/api/v1/health/live`          | Liveness: the process is running                                      |
+| GET            | `/api/v1/health/ready`         | Readiness: the database is connected (503 if not)                     |
+| POST           | `/api/v1/auth/otp/send`        | Send a 6-digit login code to an Indian mobile number                  |
+| POST           | `/api/v1/auth/otp/verify`      | Log in with the code (or add a verified phone to the current account) |
+| GET            | `/api/v1/auth/google/start`    | Start Google sign-in (browser redirect)                               |
+| GET            | `/api/v1/auth/google/callback` | Google returns here; sets the session                                 |
+| GET            | `/api/v1/auth/me`              | The logged-in user                                                    |
+| POST           | `/api/v1/auth/logout`          | Log out                                                               |
+| PATCH          | `/api/v1/users/me`             | Update name and city                                                  |
+| GET            | `/api/v1/products`             | Browse and search listings (cursor-paginated), or fetch by `ids`      |
+| GET            | `/api/v1/products/:id`         | One listing                                                           |
+| POST           | `/api/v1/products`             | Create a listing (verified phone required)                            |
+| POST           | `/api/v1/uploads`              | Upload one photo → URL                                                |
+| GET            | `/api/v1/media/:file`          | Local photo sizes (development)                                       |
+| GET            | `/api/v1/threads`              | Community feed (cursor-paginated)                                     |
+| POST           | `/api/v1/threads`              | Post a thread                                                         |
+| POST / DELETE  | `/api/v1/threads/:id/like`     | Like / unlike                                                         |
+| GET / POST     | `/api/v1/threads/:id/replies`  | List / add replies                                                    |
+| GET            | `/api/v1/products/mine`        | Your listings                                                         |
+| PATCH / DELETE | `/api/v1/products/:id`         | Edit / remove your listing (owner only)                               |
+| GET            | `/api/v1/users/:id`            | A seller's public profile                                             |
+| POST / GET     | `/api/v1/swap-requests`        | Offer a swap / your swap inboxes                                      |
+| PATCH          | `/api/v1/swap-requests/:id`    | Accept, decline or cancel                                             |
 
 Details and examples: `/api/docs` and [API_CONVENTIONS.md](docs/API_CONVENTIONS.md).
 

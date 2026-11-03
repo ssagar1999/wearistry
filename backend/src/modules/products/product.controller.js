@@ -1,10 +1,29 @@
 import { validated } from "../../middleware/validate.middleware.js";
 import { ApiError } from "../../utils/api-error.js";
-import { createProductBody, listProductsQuery, productParams } from "./product.schemas.js";
-import { createProduct, getProduct, listProducts } from "./product.service.js";
+import {
+  createProductBody,
+  listMyProductsQuery,
+  listProductsQuery,
+  productParams,
+  updateProductBody,
+} from "./product.schemas.js";
+import {
+  createProduct,
+  getProduct,
+  listMyProducts,
+  listProducts,
+  removeProduct,
+  updateProduct,
+} from "./product.service.js";
 
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
+
+/** @param {Request} req */
+function currentUser(req) {
+  if (!req.user) throw ApiError.unauthenticated();
+  return req.user;
+}
 
 /** @param {{ media: import("../uploads/media.storage.js").MediaStorage }} deps */
 export function createProductController({ media }) {
@@ -17,6 +36,13 @@ export function createProductController({ media }) {
     },
 
     /** @param {Request} req @param {Response} res */
+    async mine(req, res) {
+      const query = validated(req, "query", listMyProductsQuery);
+      const { items, nextCursor } = await listMyProducts(currentUser(req).id, query);
+      res.json({ data: items, meta: { nextCursor, limit: query.limit } });
+    },
+
+    /** @param {Request} req @param {Response} res */
     async get(req, res) {
       const { id } = validated(req, "params", productParams);
       res.json({ data: await getProduct(id) });
@@ -24,10 +50,23 @@ export function createProductController({ media }) {
 
     /** @param {Request} req @param {Response} res */
     async create(req, res) {
-      if (!req.user) throw ApiError.unauthenticated();
       const input = validated(req, "body", createProductBody);
-      const product = await createProduct(req.user, input, (url) => media.isOwnPhotoUrl(url));
+      const product = await createProduct(currentUser(req), input, (url) => media.isOwnPhotoUrl(url));
       res.status(201).json({ data: product });
+    },
+
+    /** @param {Request} req @param {Response} res */
+    async update(req, res) {
+      const { id } = validated(req, "params", productParams);
+      const patch = validated(req, "body", updateProductBody);
+      res.json({ data: await updateProduct(currentUser(req), id, patch) });
+    },
+
+    /** @param {Request} req @param {Response} res */
+    async remove(req, res) {
+      const { id } = validated(req, "params", productParams);
+      await removeProduct(currentUser(req), id);
+      res.status(204).end();
     },
   };
 }

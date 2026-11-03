@@ -35,7 +35,12 @@ Two ways to log in. Both end with the same kind of session.
 - **Users can only read and change their own account** (`/auth/me` and `PATCH /users/me` act on `req.user`, never on an ID from the client).
 - **Listings** record `sellerId` from the session, never from the request body (strict schemas reject extra fields). Threads and replies take the author from the session too.
 - **Business rules in services:** selling requires a verified phone and a name (`403`), and posting or replying requires a name.
-- **No update or delete endpoints exist yet.** When they're added, ownership (`sellerId` / `authorId` = `req.user.id`) must be checked in the service. Rule: authentication and authorization are separate checks.
+- **Ownership is checked in services,** with the owner also part of the database filter, so a listing can't change hands between the check and the write:
+  - `PATCH` and `DELETE /products/:id` need `sellerId = req.user.id`. Someone else's listing gets `403`, and curated listings with no owner can't be edited by anyone. Tested.
+  - Swap requests: only the listing's owner can accept or decline, and only the requester can cancel (`403` for the wrong party). A stranger gets `404`, so they learn nothing about requests they aren't part of. Only a `pending` request can change, even when decisions arrive at the same moment (tested).
+- **Contact details are shared only by consent:** a phone number is returned in a swap request only after the owner accepts, and only to those two people (tested). Public profiles (`GET /users/:id`) never include phone or email.
+- **Soft-deleted listings** (`removed`) return `404` everywhere and can't be edited again.
+- **Spam limits:** swap requests are limited to 20 per user per hour.
 
 ## CSRF: Implemented
 

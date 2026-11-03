@@ -64,8 +64,10 @@ describe("GET /api/v1/products", () => {
     expect(seen).not.toContain("sold-one");
   });
 
-  it("returns public fields only", async () => {
-    await Product.create(listing({ sellerId: "secret-uid" }, 1));
+  it("returns public fields only (the seller's public ID, never a phone or email)", async () => {
+    await Product.create(
+      listing({ sellerId: "0b5c6a0e-1111-4222-8333-444455556666", sellerPhone: "9999999999" }, 1),
+    );
     const res = await request(app).get("/api/v1/products").expect(200);
     expect(Object.keys(res.body.data[0]).sort()).toEqual(
       [
@@ -80,6 +82,7 @@ describe("GET /api/v1/products", () => {
         "mrp",
         "price",
         "seller",
+        "sellerId",
         "sellerSlug",
         "size",
         "state",
@@ -88,7 +91,8 @@ describe("GET /api/v1/products", () => {
         "title",
       ].sort(),
     );
-    expect(JSON.stringify(res.body)).not.toContain("secret-uid");
+    expect(res.body.data[0].sellerId).toBe("0b5c6a0e-1111-4222-8333-444455556666");
+    expect(JSON.stringify(res.body)).not.toContain("9999999999");
   });
 
   it("filters by city, category, condition, swap and seller", async () => {

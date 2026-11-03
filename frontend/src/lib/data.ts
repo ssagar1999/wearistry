@@ -18,6 +18,8 @@ export type Product = {
   exchange: boolean;
   seller: string;
   sellerSlug: string;
+  /** users.uid of the seller (links to their public profile); null on curated sample listings. */
+  sellerId: string | null;
   status: string;
   createdAt: string;
 };
@@ -34,6 +36,30 @@ export type Thread = {
   liked: boolean;
   replyCount: number;
   at: number;
+};
+
+/** A seller's public profile (GET /api/v1/users/:id). Never includes phone or email. */
+export type PublicProfile = {
+  id: string;
+  name: string;
+  city: string;
+  avatarUrl: string | null;
+  verified: boolean;
+  memberSince: string;
+};
+
+export type SwapStatus = "pending" | "accepted" | "declined" | "cancelled";
+
+/** A swap request as returned by the API. `contactPhone` is set only once the owner accepts. */
+export type SwapRequest = {
+  id: string;
+  product: { id: string; title: string; image: string };
+  offer: string;
+  note: string;
+  status: SwapStatus;
+  createdAt: number;
+  counterpart: { id: string; name: string };
+  contactPhone: string | null;
 };
 
 export type Reply = { id: string; author: string; text: string; at: number };

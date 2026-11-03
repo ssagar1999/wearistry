@@ -119,3 +119,24 @@ export async function updateProfile(uid, profile) {
   if (!user) throw ApiError.notFound("Account not found.");
   return toPublicUser(user);
 }
+
+/**
+ * A seller's public profile. Nameless accounts (never finished sign-up) aren't shown.
+ *
+ * @param {string} uid
+ */
+export async function getPublicProfile(uid) {
+  const user = await User.findOne(
+    { uid },
+    { _id: 0, uid: 1, name: 1, city: 1, avatarUrl: 1, phoneVerifiedAt: 1, createdAt: 1 },
+  ).lean();
+  if (!user?.name) throw ApiError.notFound("This seller doesn't exist.");
+  return {
+    id: user.uid,
+    name: user.name,
+    city: user.city ?? "",
+    avatarUrl: user.avatarUrl ?? null,
+    verified: Boolean(user.phoneVerifiedAt),
+    memberSince: user.createdAt.toISOString(),
+  };
+}

@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { ErrorResponse, rateLimitedResponse } from "../../docs/common.js";
-import { createProductBody, listProductsQuery, PublicProduct } from "./product.schemas.js";
+import {
+  createProductBody,
+  listMyProductsQuery,
+  listProductsQuery,
+  PublicProduct,
+  updateProductBody,
+} from "./product.schemas.js";
 
 const json = (/** @type {z.ZodType} */ schema) => ({ "application/json": { schema } });
 const error = (/** @type {string} */ description) => ({ description, content: json(ErrorResponse) });
@@ -49,6 +55,58 @@ export function registerProductDocs(registry) {
       400: error("Invalid input or photos not uploaded to Wearistry"),
       401: error("Not logged in"),
       403: error("No verified phone or name, or not from the web app"),
+      429: rateLimitedResponse,
+    },
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/products/mine",
+    tags: ["Products"],
+    summary: "Your own listings, newest first, including sold and swapped ones (not removed)",
+    security: [{ sessionCookie: [] }],
+    request: { query: listMyProductsQuery },
+    responses: {
+      200: {
+        description: "A page of your listings",
+        content: json(z.object({ data: z.array(PublicProduct), meta: listMeta })),
+      },
+      401: error("Not logged in"),
+      429: rateLimitedResponse,
+    },
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v1/products/{id}",
+    tags: ["Products"],
+    summary:
+      "Change your own listing (any of: title, category, size, condition, city, price, mrp, story, exchange, status)",
+    description: "`status` can be `active`, `sold` or `swapped`. Photos can't be changed yet.",
+    security: [{ sessionCookie: [] }],
+    request: { params: z.object({ id: z.string() }), body: { content: json(updateProductBody) } },
+    responses: {
+      200: { description: "Updated", content: json(z.object({ data: PublicProduct })) },
+      400: error("Invalid input"),
+      401: error("Not logged in"),
+      403: error("Not your listing, or not from the web app"),
+      404: error("Not found or removed"),
+      429: rateLimitedResponse,
+    },
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v1/products/{id}",
+    tags: ["Products"],
+    summary: "Remove your listing (soft delete: hidden everywhere, nothing erased)",
+    security: [{ sessionCookie: [] }],
+    request: { params: z.object({ id: z.string() }) },
+    responses: {
+      204: { description: "Removed" },
+      401: error("Not logged in"),
+      403: error("Not your listing, or not from the web app"),
+      404: error("Not found or already removed"),
       429: rateLimitedResponse,
     },
   });

@@ -35,6 +35,9 @@ Rough estimates for planning. Revisit them with real numbers from Atlas metrics.
 | 8 | **Image processing on the API** | Many sellers uploading at once (sharp is CPU-heavy) | Limited to 80 uploads per user per hour, and photos are pre-shrunk in the browser. If CPU becomes the bottleneck: move processing to a background worker or queue, or have browsers upload originals straight to S3 with a pre-signed URL and process them asynchronously |
 | 9 | **Counter drift** (`likes`, `replyCount`) | A crash between a row write and its `$inc` | Rare, and off by one at most. A periodic job can recompute counts from `thread_likes` and `thread_replies` if ever needed |
 
+| 10 | **`swap_requests` growth** | Heavy swapping | Each inbox read is one indexed page. Old requests can be archived by a job (move `declined` and `cancelled` ones older than 90 days) without changing the API |
+| 11 | **Removed listings accumulate** (soft delete) | Many sellers removing listings | They cost index space but not query time (indexes lead with `status`). A cleanup job can hard-delete `removed` listings older than a retention period, after references are checked |
+
 ## Scaling path, in order
 
 Do each step only when metrics show the need:

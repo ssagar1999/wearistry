@@ -24,6 +24,7 @@ describe("migrations", () => {
       "001-users-phone-partial-unique",
       "002-threads-split-replies-likes",
       "003-products-media-urls",
+      "004-contract-legacy-thread-arrays-and-indexes",
     ]);
   });
 
@@ -121,5 +122,69 @@ describe("migrations", () => {
       images: [`/api/v1/media/${uuid}`, "https://cdn.example/photos/x"],
     });
     expect((await products.findOne({ slug: "sample" }))?.image).toBe("https://lh3.googleusercontent.com/a");
+  });
+
+  describe("004 (destructive contract step)", () => {
+    const find = async () => {
+      const migration = (await loadMigrations()).find(
+        (m) => m.id === "004-contract-legacy-thread-arrays-and-indexes",
+      );
+      if (!migration) throw new Error("migration 004 missing");
+      return migration;
+    };
+
+    it("refuses to run when a legacy reply or like hasn't been copied yet, and changes nothing", async () => {
+      await db.collection("threads").deleteMany({});
+      await db.collection("thread_replies").deleteMany({});
+      await db.collection("thread_likes").deleteMany({});
+      await db.collection("threads").insertOne({
+        slug: "uncopied",
+        author: "A",
+        text: "Old",
+        at: 1,
+        replies: [{ _id: new mongoose.Types.ObjectId(), author: "B", text: "Hi", at: 1 }],
+        likedBy: ["u1"],
+      });
+      await expect((await find()).up(db)).rejects.toThrow(/Run migration 002 first/);
+      expect((await db.collection("threads").findOne({ slug: "uncopied" }))?.replies).toHaveLength(1);
+    });
+
+    it("after 002, removes the legacy arrays, keeps the copies, drops unused indexes only, and reruns safely", async () => {
+      await db.collection("threads").deleteMany({});
+      await db.collection("thread_replies").deleteMany({});
+      await db.collection("thread_likes").deleteMany({});
+      await db.collection("threads").insertOne({
+        slug: "copied",
+        author: "A",
+        text: "Old",
+        at: 1,
+        replies: [{ _id: new mongoose.Types.ObjectId(), author: "B", text: "Hi", at: 1793618064160 }],
+        likedBy: ["u1"],
+      });
+      await db.collection("threads").createIndex({ at: 1 }, { name: "at_1" });
+      await db.collection("threads").createIndex({ at: -1, _id: -1 });
+      await db.collection("products").createIndex({ city: 1 }, { name: "city_1" });
+      await db.collection("products").createIndex({ slug: 1 }, { unique: true, name: "slug_1" });
+
+      const migrations = await loadMigrations();
+      await migrations.find((m) => m.id === "002-threads-split-replies-likes")?.up(db);
+      const four = await find();
+      await four.up(db);
+      await four.up(db); // rerun
+
+      const thread = await db.collection("threads").findOne({ slug: "copied" });
+      expect(thread).not.toHaveProperty("replies");
+      expect(thread).not.toHaveProperty("likedBy");
+      expect(thread?.replyCount).toBe(1);
+      expect(await db.collection("thread_replies").countDocuments({ threadId: "copied" })).toBe(1);
+      expect(await db.collection("thread_likes").countDocuments({ threadId: "copied" })).toBe(1);
+
+      const threadIndexes = (await db.collection("threads").indexes()).map((i) => i.name);
+      expect(threadIndexes).not.toContain("at_1");
+      expect(threadIndexes).toContain("at_-1__id_-1"); // the compound index stays
+      const productIndexes = (await db.collection("products").indexes()).map((i) => i.name);
+      expect(productIndexes).not.toContain("city_1");
+      expect(productIndexes).toContain("slug_1"); // needed indexes stay
+    });
   });
 });

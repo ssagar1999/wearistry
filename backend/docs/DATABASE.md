@@ -10,17 +10,18 @@ Related docs:
 
 ## Collections at a glance
 
-| Collection          | Module            | One document =                       | Grows with              | Lifetime                                        |
-| ------------------- | ----------------- | ------------------------------------ | ----------------------- | ----------------------------------------------- |
-| `users`             | `users`           | A person                             | Sign-ups                | Permanent                                       |
-| `sessions`          | `auth`            | One logged-in browser                | Active logins           | Auto-deleted at `expiresAt` (TTL)               |
-| `otp_challenges`    | `auth`            | The current login code for one phone | Phones requesting codes | Auto-deleted 1 h after the last send (TTL)      |
-| `oauth_states`      | `auth`            | One in-progress Google sign-in       | Sign-in attempts        | Deleted when used; leftovers after 10 min (TTL) |
-| `products`          | `products`        | A listing                            | Listings                | Permanent (`status` marks sold or swapped)      |
-| `threads`           | `threads`         | A community post                     | Posts                   | Permanent                                       |
-| `thread_replies`    | `threads`         | A reply to a thread                  | Replies (**unbounded**) | Permanent                                       |
-| `thread_likes`      | `threads`         | One user's like of one thread        | Likes (**unbounded**)   | Deleted on unlike                               |
-| `schema_migrations` | `npm run migrate` | One applied migration                | Migrations              | Permanent, tiny                                 |
+| Collection          | Module            | One document =                         | Grows with                    | Lifetime                                                     |
+| ------------------- | ----------------- | -------------------------------------- | ----------------------------- | ------------------------------------------------------------ |
+| `users`             | `users`           | A person                               | Sign-ups                      | Permanent                                                    |
+| `sessions`          | `auth`            | One logged-in browser                  | Active logins                 | Auto-deleted at `expiresAt` (TTL)                            |
+| `otp_challenges`    | `auth`            | The current login code for one phone   | Phones requesting codes       | Auto-deleted 1 h after the last send (TTL)                   |
+| `oauth_states`      | `auth`            | One in-progress Google sign-in         | Sign-in attempts              | Deleted when used; leftovers after 10 min (TTL)              |
+| `products`          | `products`        | A listing                              | Listings                      | Permanent (`status` marks sold or swapped)                   |
+| `threads`           | `threads`         | A community post                       | Posts                         | Permanent                                                    |
+| `thread_replies`    | `threads`         | A reply to a thread                    | Replies (**unbounded**)       | Permanent                                                    |
+| `thread_likes`      | `threads`         | One user's like of one thread          | Likes (**unbounded**)         | Deleted on unlike                                            |
+| `swap_requests`     | `swaps`           | One offer: "my piece for your listing" | Swap requests (**unbounded**) | Permanent (status: pending, accepted, declined or cancelled) |
+| `schema_migrations` | `npm run migrate` | One applied migration                  | Migrations                    | Permanent, tiny                                              |
 
 ## Relationships, and why each is embedded or referenced
 
@@ -86,15 +87,15 @@ Every index serves a specific query. **No index without a query, and no frequent
 - **Photos:** `image` (the cover) and `images` (1–8).
 - **Seller:** `seller` (a copy of the name), `sellerSlug` (curated sample sellers) and `sellerId`. `sellerId` is missing on listings created before ownership existed.
 
-| Index (ESR order)                                                          | Serves                                                                                   |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `{ slug: 1 }` unique                                                       | Product page, ID lists (saved items), thread cards                                       |
-| `{ status: 1, createdAt: -1, _id: -1 }`                                    | Browse: newest active listings, cursor-paginated                                         |
-| `{ status: 1, city: 1, createdAt: -1, _id: -1 }`                           | Browse by city                                                                           |
-| `{ status: 1, category: 1, createdAt: -1, _id: -1 }`                       | Browse by category                                                                       |
-| `{ sellerSlug: 1, createdAt: -1, _id: -1 }` partial (`sellerSlug > ""`)    | Curated seller pages                                                                     |
-| `{ sellerId: 1, createdAt: -1, _id: -1 }` partial (`sellerId` is a string) | A seller's own listings. Reserved for "My listings" and seller profiles, which come next |
-| `{ title: "text", story: "text" }`                                         | Keyword search (`?q=`)                                                                   |
+| Index (ESR order)                                                          | Serves                                                                      |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `{ slug: 1 }` unique                                                       | Product page, ID lists (saved items), thread cards                          |
+| `{ status: 1, createdAt: -1, _id: -1 }`                                    | Browse: newest active listings, cursor-paginated                            |
+| `{ status: 1, city: 1, createdAt: -1, _id: -1 }`                           | Browse by city                                                              |
+| `{ status: 1, category: 1, createdAt: -1, _id: -1 }`                       | Browse by category                                                          |
+| `{ sellerSlug: 1, createdAt: -1, _id: -1 }` partial (`sellerSlug > ""`)    | Curated seller pages                                                        |
+| `{ sellerId: 1, createdAt: -1, _id: -1 }` partial (`sellerId` is a string) | "My listings" (`GET /products/mine`) and public seller pages (`?sellerId=`) |
+| `{ title: "text", story: "text" }`                                         | Keyword search (`?q=`)                                                      |
 
 Filters on `condition` and `exchange`, and `city` combined with `category`, aren't separately indexed: they're applied while walking the closest index above. That's fine because results stop at the page size. Add a dedicated compound index only if `explain()` on real data shows many documents examined per result.
 
@@ -125,6 +126,22 @@ Filters on `condition` and `exchange`, and `city` combined with `category`, aren
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `{ threadId: 1, userId: 1 }` unique | One like per person; like and unlike; "which of these 20 threads did I like?" (`{ userId, threadId: { $in } }`) |
 
+### `swap_requests`
+
+`productId` (`products.slug`), `productTitle` and `productImage` (copies), `ownerId` (`users.uid` of the seller), `ownerName`, `requesterId`, `requesterName`, `offer` (≤ 300), `note` (≤ 500), `status`, timestamps.
+
+| Index                                                                        | Serves                                                                                                                     |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `{ ownerId: 1, createdAt: -1, _id: -1 }`                                     | "Requests I received", newest first, cursor-paginated                                                                      |
+| `{ requesterId: 1, createdAt: -1, _id: -1 }`                                 | "Requests I sent"                                                                                                          |
+| `{ requesterId: 1, productId: 1 }` unique, **partial** (`status: "pending"`) | One open request per person per piece. Partial, so a person can ask again once an earlier request is declined or cancelled |
+
+Why a separate collection: requests accumulate without limit. The names, title and photo are copied in so both inboxes render with no lookups.
+
+**Contact details:** a phone number is never stored here. When a request is `accepted`, the API looks up each party's phone from `users` (one batched query per page) and returns it only to the two people involved.
+
+**Soft delete (`products.status = "removed"`):** "Remove" hides a listing from browse, search, product pages, saved lists and thread cards, but erases nothing, so it's reversible and no reference breaks. All the browse indexes start with `status`, so removed listings are skipped by the index itself. Hard deletion, if ever needed, would be a deliberate cleanup job.
+
 ### Unused indexes left in Atlas (to drop in a cleanup migration)
 
 The web app created these. They're now unused, but they still cost writes and memory:
@@ -137,25 +154,32 @@ They're kept until the new code has run in production, then dropped by migration
 
 ## Query patterns, and what each costs
 
-| Endpoint                              | Database operations                                                                                           | Cost                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------- |
-| Any authenticated request             | `sessions.findOne` + `users.findOne` (projection)                                                             | 2 indexed point reads |
-| `POST /auth/otp/send`                 | 1 conditional update (+ ≤ 1 insert, + 1 read only when over the limit)                                        | 1–3                   |
-| `POST /auth/otp/verify`               | `$inc` attempts, delete, user upsert, session insert                                                          | 4                     |
-| `GET /auth/google/start` / `callback` | 1 insert / delete + upsert + insert                                                                           | 1 / 3                 |
-| `PATCH /users/me`                     | 1 update                                                                                                      | 1                     |
-| `GET /products`                       | 1 index-ordered find (≤ 51 docs, projected, lean)                                                             | 1                     |
-| `GET /products?ids=…` (≤ 50)          | 1 `$in` on `slug`                                                                                             | 1                     |
-| `GET /products/:id`                   | 1 point read                                                                                                  | 1                     |
-| `POST /products`                      | 1 insert                                                                                                      | 1                     |
-| `POST /uploads`                       | No database; image processing and storage only                                                                | 0                     |
-| `GET /threads`                        | Threads page + likes `$in` (if logged in) + product cards `$in`, so **3 queries per page, whatever its size** | 3                     |
-| `POST /threads`                       | (product check) + insert                                                                                      | 1–2                   |
-| `POST` / `DELETE /threads/:id/like`   | exists + insert/delete + `$inc` + read count                                                                  | 4                     |
-| `GET /threads/:id/replies`            | exists + 1 index-ordered find                                                                                 | 2                     |
-| `POST /threads/:id/replies`           | exists + insert + `$inc`                                                                                      | 3                     |
+| Endpoint                              | Database operations                                                                                                         | Cost                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Any authenticated request             | `sessions.findOne` + `users.findOne` (projection)                                                                           | 2 indexed point reads |
+| `POST /auth/otp/send`                 | 1 conditional update (+ ≤ 1 insert, + 1 read only when over the limit)                                                      | 1–3                   |
+| `POST /auth/otp/verify`               | `$inc` attempts, delete, user upsert, session insert                                                                        | 4                     |
+| `GET /auth/google/start` / `callback` | 1 insert / delete + upsert + insert                                                                                         | 1 / 3                 |
+| `PATCH /users/me`                     | 1 update                                                                                                                    | 1                     |
+| `GET /products`                       | 1 index-ordered find (≤ 51 docs, projected, lean)                                                                           | 1                     |
+| `GET /products?ids=…` (≤ 50)          | 1 `$in` on `slug`                                                                                                           | 1                     |
+| `GET /products/:id`                   | 1 point read                                                                                                                | 1                     |
+| `POST /products`                      | 1 insert                                                                                                                    | 1                     |
+| `POST /uploads`                       | No database; image processing and storage only                                                                              | 0                     |
+| `GET /products/mine`                  | 1 index-ordered find on `{ sellerId, createdAt, _id }` (status filtered during the index scan)                              | 1                     |
+| `PATCH /products/:id`                 | 1 point read (ownership and price check) + 1 conditional update (owner in the filter)                                       | 2                     |
+| `DELETE /products/:id`                | 1 point read + 1 update (soft delete)                                                                                       | 2                     |
+| `GET /users/:id`                      | 1 point read with a projection                                                                                              | 1                     |
+| `POST /swap-requests`                 | 1 product read + 1 insert (the unique partial index rejects duplicates)                                                     | 2                     |
+| `GET /swap-requests`                  | 1 index-ordered find + (only if any are accepted) 1 batched `users` lookup                                                  | 1–2                   |
+| `PATCH /swap-requests/:id`            | 1 conditional update (`pending` status and the right party in the filter); + 1 read only when it fails, to choose the error | 1–2                   |
+| `GET /threads`                        | Threads page + likes `$in` (if logged in) + product cards `$in`, so **3 queries per page, whatever its size**               | 3                     |
+| `POST /threads`                       | (product check) + insert                                                                                                    | 1–2                   |
+| `POST` / `DELETE /threads/:id/like`   | exists + insert/delete + `$inc` + read count                                                                                | 4                     |
+| `GET /threads/:id/replies`            | exists + 1 index-ordered find                                                                                               | 2                     |
+| `POST /threads/:id/replies`           | exists + insert + `$inc`                                                                                                    | 3                     |
 
-The important list queries are checked in tests with `explain("executionStats")`: they must use `IXSCAN`, with no `COLLSCAN` and no in-memory `SORT` (`tests/integration/products.test.js` and `threads.test.js`).
+The important list queries (browse, my listings, feed, replies, both swap inboxes) are checked in tests with `explain("executionStats")`: they must use `IXSCAN`, with no `COLLSCAN` and no in-memory `SORT` (`tests/integration/products.test.js` and `threads.test.js`).
 
 ## Pagination
 

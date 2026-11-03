@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ErrorResponse, rateLimitedResponse } from "../../docs/common.js";
-import { PublicUser, updateProfileBody } from "./user.schemas.js";
+import { PublicProfile, PublicUser, publicProfileParams, updateProfileBody } from "./user.schemas.js";
 
 const json = (/** @type {z.ZodType} */ schema) => ({ "application/json": { schema } });
 
@@ -18,6 +18,20 @@ export function registerUserDocs(registry) {
       400: { description: "Invalid input", content: json(ErrorResponse) },
       401: { description: "Not logged in", content: json(ErrorResponse) },
       403: { description: "Request not from the Wearistry web app", content: json(ErrorResponse) },
+      429: rateLimitedResponse,
+    },
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/users/{id}",
+    tags: ["Users"],
+    summary: "A seller's public profile (no phone or email)",
+    request: { params: publicProfileParams },
+    responses: {
+      200: { description: "The profile", content: json(z.object({ data: PublicProfile })) },
+      400: { description: "Malformed ID", content: json(ErrorResponse) },
+      404: { description: "No such seller", content: json(ErrorResponse) },
       429: rateLimitedResponse,
     },
   });

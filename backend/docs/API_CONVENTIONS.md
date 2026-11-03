@@ -134,6 +134,21 @@ Readiness returns `503` with a `data` body, not an `error`, because "not ready" 
 | GET           | `/api/v1/threads/:id/replies` | none                     | Replies, oldest first, cursor-paginated                                                                                              |
 | POST          | `/api/v1/threads/:id/replies` | session + name           | Reply `{ text }`                                                                                                                     |
 
+**Managing your listings, seller profiles and swaps:**
+
+| Method | Path                                           | Auth                     | Purpose                                                                                                                                              |
+| ------ | ---------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/v1/products/mine`                        | session                  | Your listings (including sold and swapped, not removed), cursor-paginated                                                                            |
+| PATCH  | `/api/v1/products/:id`                         | session, owner           | Change any of title, category, size, condition, city, price, mrp, story, exchange, status (`active`, `sold`, `swapped`). Photos can't be changed yet |
+| DELETE | `/api/v1/products/:id`                         | session, owner           | Remove (soft delete). `204`                                                                                                                          |
+| GET    | `/api/v1/products?sellerId=<uid>`              | none                     | A real seller's active listings                                                                                                                      |
+| GET    | `/api/v1/users/:id`                            | none                     | Public profile: name, city, verified-phone flag, member since. No phone or email                                                                     |
+| POST   | `/api/v1/swap-requests`                        | session + verified phone | Offer a piece `{ productId, offer, note? }`                                                                                                          |
+| GET    | `/api/v1/swap-requests?box=received` or `sent` | session                  | Your requests, cursor-paginated. `contactPhone` only when accepted                                                                                   |
+| PATCH  | `/api/v1/swap-requests/:id`                    | session                  | `{ action }` is `accept`, `decline` or `cancel`. The owner accepts or declines, the requester cancels                                                |
+
+**Not found vs forbidden:** listings are public, so editing someone else's gives `403`. Swap requests are private, so a stranger gets `404`.
+
 **Photo URLs:** a stored photo is `<base>/<uuid>`. Request a size by appending `-480.webp`, `-960.webp` or `-1600.webp`.
 
 ## Headers

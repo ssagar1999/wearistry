@@ -75,12 +75,16 @@ describe("app-wide behaviour", () => {
       "/api/v1/health/ready",
       "/api/v1/media/{file}",
       "/api/v1/products",
+      "/api/v1/products/mine",
       "/api/v1/products/{id}",
+      "/api/v1/swap-requests",
+      "/api/v1/swap-requests/{id}",
       "/api/v1/threads",
       "/api/v1/threads/{id}/like",
       "/api/v1/threads/{id}/replies",
       "/api/v1/uploads",
       "/api/v1/users/me",
+      "/api/v1/users/{id}",
     ]);
     expect(res.body.components.schemas.ErrorResponse).toBeDefined();
     expect(res.body.paths["/api/v1/health/live"].get.responses["429"]).toBeDefined();

@@ -28,6 +28,8 @@ export default async function Account() {
       )}
       <div className="grid gap-2">
         <Link href="/sell" className="rounded-xl border border-line bg-white p-4 font-medium">List a piece</Link>
+        <Link href="/listings" className="rounded-xl border border-line bg-white p-4 font-medium">My listings</Link>
+        <Link href="/swaps" className="rounded-xl border border-line bg-white p-4 font-medium">Swap requests</Link>
         <Link href="/saved" className="rounded-xl border border-line bg-white p-4 font-medium">Saved items</Link>
         <Link href="/threads" className="rounded-xl border border-line bg-white p-4 font-medium">Threads</Link>
       </div>

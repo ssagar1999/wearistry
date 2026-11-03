@@ -15,6 +15,7 @@ export const listProductsQuery = z
     exchange: z.literal("true").optional(),
     q: z.string().trim().min(2).max(60).optional(),
     sellerSlug: slug.optional(),
+    sellerId: z.uuid().optional(),
     // Specific listings by ID (saved items, thread cards): at most one page, returned in the given order.
     ids: z
       .string()
@@ -43,6 +44,28 @@ export const createProductBody = z
     message: "Original price can't be lower than your price.",
   });
 
+const editable = {
+  title: z.string().trim().min(2).max(80),
+  category: z.enum(CATEGORIES),
+  size: z.enum(SIZES),
+  condition: z.enum(CONDITIONS),
+  city: z.enum(CITIES),
+  price: z.number().int().min(1).max(1_000_000),
+  mrp: z.number().int().min(1).max(1_000_000),
+  story: z.string().trim().max(2000),
+  exchange: z.boolean(),
+  status: z.enum(["active", "sold", "swapped"]),
+};
+
+/** Partial update of your own listing. Photos can't be changed yet; remove the listing and post it again. */
+export const updateProductBody = z
+  .object(editable)
+  .partial()
+  .strict()
+  .refine((body) => Object.keys(body).length > 0, { message: "Send at least one field to change." });
+
+export const listMyProductsQuery = z.object(pageQuery).strict();
+
 export const PublicProduct = z
   .object({
     id: z.string(),
@@ -60,6 +83,7 @@ export const PublicProduct = z
     exchange: z.boolean(),
     seller: z.string(),
     sellerSlug: z.string(),
+    sellerId: z.string().nullable(),
     status: z.string(),
     createdAt: z.string(),
   })
